@@ -1,0 +1,46 @@
+#!/usr/bin/env python3.10
+# #!/Users/myUserID/opt/anaconda3/bin/python3.9
+
+from StartUpScript import *
+
+import argparse
+from pprint import pprint
+
+parser = argparse.ArgumentParser()
+
+# parser.add_argument( "echo", help = "to echo the parameter here" ) # this is for positional argument
+
+parser.add_argument( '-of', '--outfile', type = str, help = 'the file to print to' ) # for keyword argument (options)
+parser.add_argument( '-ov', '--outputVar', type = str, help = 'name of the variable to assign to in the output file' )
+
+args = parser.parse_args()
+
+a = ( (10, 20), 30, 40, ((50,), 60), 70)
+
+if args.outfile != None :
+
+  print( '\n' + 'outfile : ' + args.outfile )
+
+  if args.outputVar != None :
+    print( 'outputVar : ' + args.outputVar )
+
+  outfile = open( args.outfile, mode = 'w' )
+
+  if args.outputVar != None :
+    print( '\n' + args.outputVar + ' = \\' + '\n\\', file = outfile ) # can have no '\n' at the end ; 'print' will print one
+  else :
+    print( file = outfile )
+
+  pprint( a, stream = outfile, width = 10, indent = 2 )
+  print( file = outfile )
+
+  B( 'echo Testing of executing shell command \'ls\' : ' )
+  B( 'ls' )
+
+if args.outputVar != None :
+  print( '\n' + args.outputVar + ' = ' + '\n' )
+else :
+  print()
+
+pprint( a, width = 10, indent = 2 )
+print()
