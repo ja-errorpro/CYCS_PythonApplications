@@ -210,6 +210,7 @@ Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
 TypeError: F() missing 1 required keyword-only argument: 'd'
 ```
+
 There is nevertheless a small surprise in the above！！！
 
 In the above definition of F(), we see that the rule "There should be NO non-defaulted parameters behind a defaulted parameter" has been broken. Why is it so? Well, this rule is in place because the system must be able to decide about positional correspondence (between arguments and parameter) without encountering any ambiguity. Since there is now an additional rule that says "for each parameter 'p' behind '*para', it must be the case that either 'p' is defaulted or the corresponding argument (in a corresponding function call) is a keyword argument," it is now okay to have non-defaulted parameers behind a defaulted parameter ＩＦ the non-defaulted parameter is ＢＥＨＩＮＤ '*para'. Because the argument (in a corresponding function call) corresponding to 'p' must be a keyword argument now (and cannot be a positional argument).
@@ -248,7 +249,9 @@ def F5( ..., **aHashmap) : ...
 
 
 Rule : '**kwpara' must go last in the para. list     
+```
 # Rationale of the rule : This rule is necessary, because 'kwpara' will "eat up" all the REMAINING keyword arguments (once it starts to "eat"), unless the to-be-eaten keyword arguments already found their counterparts in the parameter list. We must give all the potentially "may be eaten" keyword arguments a chance to find their potentially-may-exist counterparts first (if their counterparts do exis) before they get "eaten."
+```
 
 ```sh
 >>> def F( a = 10, b = 20, **c ) :
@@ -318,6 +321,7 @@ When a parameter list contains '*' and/or '/', the situation is more complex.
 
 --------------------------------------------------------------------------------------------------------------------------------
 
+```sh
 >>> def F( a, b, c = 3, d = 5, *e, f = 7, g = 11, **h ) :
 ...   print( 'a = ' + str( a ) )
 ...   print( 'b = ' + str( b ) )
@@ -380,6 +384,7 @@ c = 10
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
 TypeError: F() takes 1 positional argument but 2 were given
+```
 
 --------------------------------------------------------------------------------------------------------------------------------
 
@@ -423,6 +428,7 @@ Function definition :    def F( plain-paras, defaulted-paras )     # defaulted p
 
 4. 範例
 
+```sh
   def F( a, b, c = 3, d = 5, *e, f = 7, g = 11, **h ) : 
     ...
 
@@ -497,7 +503,7 @@ Function definition :    def F( plain-paras, defaulted-paras )     # defaulted p
 
 
   # Why is it so, folks？？？
-
+```
 
 
 --------------------------------------------------------------------------------------------------------------------------------
@@ -531,6 +537,7 @@ Python's idea of using '*para' in a parameter list (to pack the corresponding ca
 //      va_start            va_arg              va_copy
 //      va_end              va_list
 
+```c
 # include <stdio.h>
 # include <stdarg.h>
 # include <math.h>
@@ -597,6 +604,7 @@ double deviation( int first, ... )  { // 'first' is the first one of the list we
     return count ? sqrt( sum / count ) : 0.0 ;
 
 } // Deviation()
+```
 
 --- Output ---
 
@@ -614,6 +622,7 @@ Python's dictionary corresponds to hashmap of C++ and Java and the concept of "a
 
 ### C++ HashMap ###
 
+```c
 #include <iostream>
 #include <string>
 #include <map>
@@ -634,11 +643,13 @@ int main() {
     } // for
 
 } // main()
+```
 
 ### END - C++ HashMap example ###
 
 ### Corresponding Python code ###
 
+```sh
 >>> players = {}   # OR : players = dict()
 >>> players = dict()
 >>> players
@@ -652,6 +663,7 @@ int main() {
 ...
 2 :  Chang San
 1 :  Wang Wu
+```
 
 ### END - Corresponding Python code ###
 
@@ -678,6 +690,7 @@ From library.pdf ...
 
 The following examples all return a dictionary equal to { "one": 1, "two": 2, "three": 3 } :
 
+```sh
 >>> a = { 'one': 1, 'two': 2, 'three': 3 }
 >>> b = dict( one = 1, two = 2, three = 3 )       
 >>> c = dict( zip( ['one', 'two', 'three'], [1, 2, 3] ) )
@@ -712,11 +725,13 @@ two : 2
 
 >>> e
 {'two': 2, 'one': 1, 'three': 3}
+```
 
 ########### A long-time question by hsia ###########
 
 ### How do we specify an array (or linked list) of C-styled-structs in Python ???
 
+```sh
 >>> b = [ { 'id' : '10827359', 'name': 'Tom', 'age' : 22, 'score' : 85 }, { 'id' : '10827372', 'name': 'Peter', 'age' : 23, 'score' : 70 } ]
 >>> b[1]['score'] = 75
 
@@ -731,9 +746,11 @@ two : 2
 ### ??? How about this ??? ###
 >>> a = { '10827359' : { 'name': 'Tom', 'age' : 22, 'score' : 85 }, '10827372': { 'name': 'Peter', 'age' : 23, 'score' : 70 }  }
 >>> a['10827372']['score'] = 75
+```
 
 ####################################################
 
+```sh
 >>> help( dict )
 
 class dict(object)
@@ -791,6 +808,7 @@ class dict(object)
  |      D.values() -> an object providing a view on D's values
  |  
  |  ...
+```
 
 To get a deeper feel of the concept of Python dictionaries, let's try to sort the content of a dictionary as an exercise.
 
@@ -800,6 +818,7 @@ To get a deeper feel of the concept of Python dictionaries, let's try to sort th
 # https://sparkbyexamples.com/python/python-sort-dictionary-by-key/
 # also see https://www.freecodecamp.org/news/sort-dictionary-by-value-in-python/
 
+```sh
 >>> my_dict = { 'Apple' : 5, 'papaya' : 6, 'kiwi' : 4, 'pomegranate' : 11, 'strawberry' : 10 }
 
 >>> print( my_dict )
@@ -880,9 +899,11 @@ sorted(iterable, /, *, key=None, reverse=False)
 
 >>> a
 [('kiwi', 4), ('Apple', 5), ('papaya', 6)]
+```
 
 ############ END - What 'sorted()' is and how to use it ############
 
+```sh
 >>> # Sort the (view of a) dictionary by key in ascending order (and then use the result to produce a new dictionary)
 
 >>> new_dict = dict( sorted( my_dict.items() ) ) 
@@ -969,6 +990,7 @@ print(...)
     sep:   string inserted between values, default a space.
     end:   string appended after the last value, default a newline.
     flush: whether to forcibly flush the stream.
+```
 
 --------------------------------------------------------------------------------------------------------------------------------
 
@@ -976,6 +998,7 @@ print(...)
 
 --------------------------------------------------------------------------------------------------------------------------------
 
+```sh
 # '*' is the "unpacking" operator for iterables (e.g., tuple/list/the-list-of-keys-of-a-dictionary) ;
 # '**' is the unpacking operator for dictionaries ; used either for redefining a new dictionary or for passing a list of keyword arguments
 # 
@@ -1155,13 +1178,14 @@ mandatory value
 ('a', 'b', 'c')
 default
 {'name': 'Chris', 'age': 33}
-
+```
 
 -------
 
 
 # A little bit more practices
 
+```sh
 # *c : arbitrary number of arguments (wrapped in a tuple named 'c')
 # def F1( a, b, *c )  # starting with the third argument, '*c' packs all remaining non-keyword arguments into a tuple named 'c'
 
@@ -1175,6 +1199,7 @@ def Print( a, *args, b ) :  # 'args' is a tuple ; when called, 'b' must be speci
   print( b, *args, a )      # 'args' is being unpacked here
 
 Print( 3, 4, 5, 6, b = 7 ) # we get >>7 4 5 6 3<<
+```
 
 --------------------------------
 
