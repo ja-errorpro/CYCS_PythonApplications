@@ -39,17 +39,17 @@ The correspondence between the list of arguments and the list of parameters is b
 --------------------------------------------------------------------------------------------------------------------------------
 
 ㄧㄧㄧ Basic rule ㄧㄧㄧ
-
+```
 Function call       :    F( plain-arguments, keyword-arguments )   # keyworded arguments always go BEHIND positional arguments
                             ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
                             pos. important   pos. irrelevant
 
                          注意：已經對應到的positional argument不能再以keyword argument對應之
                               例： def F( a, b, c = 10) : ...  不能用  F( 100, 200, b = 300 ) 呼叫之
-
+```
 
 ----- BUT be aware of the appearance of '*' and/or '/' in the parameter list of a function definition ----------------
-
+```py
 def F2( other-paras, *, paras-that-must-be-passed-with-the-use-of-keywords ) : ...              # ('*'之後的)pass時必須用keyword
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
                         pos. irrelevant
@@ -61,7 +61,7 @@ def F3( paras-are-matched-by-position-only, /, other-paras ) : ...              
 def F4( paras-that-are-matched-by-position-only, /, *, paras-that-must-be-passed-with-the-use-of-keywords )
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         pos. important                                 pos. irrelevant
-
+```
 ----- END - be aware of the appearance of '*' and/or '/' in the parameter list of a function definition --------------
 
 --------------------------------------------------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ def F4( paras-that-are-matched-by-position-only, /, *, paras-that-must-be-passed
 Function definition :    def F( plain-paras, defaulted-paras )   # defaulted paras always go BEHIND paras with no defaults
                                 ^^^^^^^^^^^  ^^^^^^^^^^^^^^^
                                 positions are always important
-
+```sh
 >>> def F( a = 10, b ) :
   File "<stdin>", line 1
     def F( a = 10, b ) :
@@ -125,13 +125,13 @@ a = 100
 b = 200
 c = 300
 d = 20
-
+```
 --------------------------------------------------------------------------------------------------------------------------------
 
 ㄧㄧㄧ First added complexity ㄧㄧㄧ
-
+```py
 def F5( ..., *aTuple, ... ) : ...
-
+```
   *aTuple : the corresponding (variable number of) NON-KEYWORDED arguments are packed as a tuple (named 'aTuple')
 
 ### "*aTuple allows us to pass a variable number of non-keyworded arguments to a Python function." ###
@@ -143,7 +143,7 @@ In other words : any parameter BEHIND '*para' must be either defaulted (and thus
 
 Note also that once a keyword argument appears in a function call, the arguments behind it can only be keyword arguments.
 
-
+```sh
 >>> def F( *a, b ) :     # 'a' is a tuple ; 'b' must correspond to a keyword argument when 'F' is called
 ...   return sum(a), b
 ...
@@ -209,11 +209,12 @@ d = 50
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
 TypeError: F() missing 1 required keyword-only argument: 'd'
-
+```
 There is nevertheless a small surprise in the above！！！
 
 In the above definition of F(), we see that the rule "There should be NO non-defaulted parameters behind a defaulted parameter" has been broken. Why is it so? Well, this rule is in place because the system must be able to decide about positional correspondence (between arguments and parameter) without encountering any ambiguity. Since there is now an additional rule that says "for each parameter 'p' behind '*para', it must be the case that either 'p' is defaulted or the corresponding argument (in a corresponding function call) is a keyword argument," it is now okay to have non-defaulted parameers behind a defaulted parameter ＩＦ the non-defaulted parameter is ＢＥＨＩＮＤ '*para'. Because the argument (in a corresponding function call) corresponding to 'p' must be a keyword argument now (and cannot be a positional argument).
 
+```sh
 # Nonetheless, the system still has to deal with the following.
 
 >>> def F( a, b, c = 10, d = 20 ) :
@@ -224,13 +225,14 @@ In the above definition of F(), we see that the rule "There should be NO non-def
 100 200 300 20
 
 # Ambiguity occurs in cases like >>def F( a, b = 10, c, d = 20, e)<<  # which arg. should correspond to what para. for this call >>F(1, 2, 3, 4)<< ???
-
+```
 
 
 --------------------------------------------------------------------------------------------------------------------------------
 
 ㄧㄧㄧ Second added complexity ㄧㄧㄧ
 
+```sh
 def F5( ..., **aHashmap) : ...
 
   **aHashmap : the corresponding (variable number of) KEYWORD arguments are packed as a hashmap (named 'aHashmap')
@@ -242,10 +244,13 @@ def F5( ..., **aHashmap) : ...
 ...
 >>> F( 10, 200, e = 300, f = 4000, c = 555, g = 50000, d = 333 )
 (1098, 54300)
+```
+
 
 Rule : '**kwpara' must go last in the para. list     
 # Rationale of the rule : This rule is necessary, because 'kwpara' will "eat up" all the REMAINING keyword arguments (once it starts to "eat"), unless the to-be-eaten keyword arguments already found their counterparts in the parameter list. We must give all the potentially "may be eaten" keyword arguments a chance to find their potentially-may-exist counterparts first (if their counterparts do exis) before they get "eaten."
 
+```sh
 >>> def F( a = 10, b = 20, **c ) :
 ...   print( a, b )
 ...   print( c )
@@ -259,11 +264,13 @@ Rule : '**kwpara' must go last in the para. list
 ... 
 >>> F( 10, 20, 30, 40, a = 50, b = 60, c = 70 )
 (100, 180)
+```
 
 Rule : there can be at most one '*para' and at most one '**kwpara' in a para. list.
 
 Note : both '*para' and 'kwpara' can accommodate the case of "zero or more arguments"
 
+```sh
 >>> def F( *a, **b ) :
 ...   for item in a :
 ...     print( a, ' ', end = '' )
@@ -279,6 +286,7 @@ Note : both '*para' and 'kwpara' can accommodate the case of "zero or more argum
 ... 
 >>> F( 10, 20, 30, 40, a = 50, b = 60, c = 70 )   # 'b = 60' corresponds to the parameter 'b' ; the remaining keyword arguments ('a = 50' and 'c = 70') correspond to the parameter 'c'
 (100, 120)
+```
 
 --------------------------------------------------------------------------------------------------------------------------------
 
