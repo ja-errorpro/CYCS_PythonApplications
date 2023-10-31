@@ -1,6 +1,6 @@
 Week-of-1024(Week06Materials).txt
 
-～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+---
 
 Parameter passing
 * What are there
@@ -13,7 +13,7 @@ Relating to C's va_list
 
 How to print without a newline
 
-～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+---
 
                          Parameter passing in Python
 

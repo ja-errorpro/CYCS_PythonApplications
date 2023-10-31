@@ -1,6 +1,6 @@
 Week-of-1017(Week05Materials).txt
 
-～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+---
 
 Review (of what you have been taught) - Q/A
 
@@ -8,13 +8,13 @@ Code tracing (tic-tac-toe)
 
 The use of ChatGPT (and the like) as coding assistants
 
-～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+---
 
-～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+---
 
                                   Review
 
-～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+---
 
 -------
 
