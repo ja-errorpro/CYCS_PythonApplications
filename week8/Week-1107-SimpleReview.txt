@@ -1,0 +1,310 @@
+---------------------------------- slice ---------------------------------------
+
+How to memorize???
+
+a[ 起點：終點：increment ]
+
+# 'a' = 'a[:]' = 'a[::]'
+
+規矩：
+1. Default方向是 由左往右; increment的default為1(亦即由左往右)
+2. 欄位一與欄位二沒寫的要(依照欄位三所specify之方向或default的往右方向)尊重有寫的！(欄位三沒寫就是default的往右方向)
+3. 「欄位一+欄位二所explicitly specify之方向」與「欄位三所explicitly/implicitly specifies之方向」必須要一致！如果不一致，就印empty content
+   # 欄位一與欄位二只要有一個沒寫(不管欄位三有沒有寫)、方向性的一致性就沒有問題！因為欄位一與欄位二沒寫的必須(依照方向)尊重有寫的。
+4. 一旦方向決定了(一致性也OK)，欄位一與欄位二的defaults就是依照此方向而言的「extreme起點」與「extreme終點」(起點的極值與終點的極值)
+5. 印起點、依照increment印下一個、直至終點(如果終點是explicitly specifies者、就不含終點; 如果終點是implicitly specifies者、就包括終點)
+
+ＳＯＰ
+1. 先看欄位三所述之方向：正數是往右、負數是往左，沒寫就是(default的)往右。
+2. 方向一決定、就知道欄位一與欄位二「誰是起點、誰是終點」
+3. 起點如果沒寫，那就是依照此方向而言的「extreme起點」(此方向起點的極值)。終點如果沒寫，那就是依照此方向而言的「extreme終點」(此方向終點的極值)。
+4. 如果起點與終點的值都有specify，其所述之方向必須與欄位三所述之方向一致，否則就是empty。
+5. 印起點、依照increment(其default為1)印下一個、直至終點(如果終點是explicitly specify者、就不含終點; 如果終點是default的極值、就包括終點)
+
+###################################################################################################################
+
+# "a slice is a genuine copy of the original"???
+
+# A slice is only a SHALLOW copy of the original !
+
+###################################################################################################################
+
+Finxter puzzles???  Maybe not for this time.
+
+###################################################################################################################
+
+1. a//b 是介於 ceiling與floor之間，取較小的那個
+
+                ceiling    floor     a%b
+   4.2//0.5        9         8       0.2
+   -4.2//0.5      -8        -9       0.3
+   4.2//-0.5      -8        -9      -0.3
+   -4.2//-0.5      9         8      -0.2
+
+2. a%b 是 b - a//b * b
+
+
+###################################################################################################################
+
+>>> a = ( 1,2,3,4,5,6,7 )
+
+>>> b = a[ 0 : 2 ] + ( 30, ) + a[ 3 : ]    # >>(30)<< is just >>30<< (and '(' and ')' are just paren.) ; >>(30,)<< is the list >>(30)<<
+
+>>> b
+(1, 2, 30, 4, 5, 6, 7)
+
+>>> c = ( 'a','b','c','d','e' )
+
+>>> d = a[ 0 : 2 ] + ( c, ) + a[ 3 : ]
+
+>>> d
+(1, 2, ('a', 'b', 'c', 'd', 'e'), 4, 5, 6, 7)
+
+>>> a    # 'a' is still the name of the same value
+(1, 2, 3, 4, 5, 6, 7)
+
+>>> c    # 'c' is still the name of the same value
+('a', 'b', 'c', 'd', 'e')
+
+###################################################################################################################
+
+>>> list1.append( newElement )     # vs. C's 'int_a << 2' # the difference is ...
+>>> list1.insert( index, newElement )
+>>> list1[ index ] = newElement
+>>> list1.remove[ existingElement ]  # # question about efficiency
+>>> del list1[ index ]
+>>> del list1
+>>> list1.pop()           # remove the last one
+>>> list1.pop(0)          # the 'pop' we know
+>>> list1.pop( i )        # remove( index )
+
+list.append() # Add one new item to the end
+list.extend() # Adds all the items of the specified iterable (list, tuple,
+              # set, dictionary, string) to the end of the list.
+list.clear()
+list.copy()
+list.count()
+list.index()
+list.insert()
+list.pop()
+list.remove()
+list.reverse()
+list.sort()
+
+>>> a1 = [ 1,2,3,4,5 ]
+>>> a1
+[1, 2, 3, 4, 5]
+
+>>> b1 = a1
+>>> b1
+[1, 2, 3, 4, 5]
+
+>>> a1[3] = 10
+>>> a1
+[1, 2, 3, 10, 5]
+
+>>> b1
+[1, 2, 3, 10, 5]       # <---------- Look here
+
+>>> b1 = b1 + [ 'a', 'b', 'c' ]
+>>> b1
+[1, 2, 3, 10, 5, 'a', 'b', 'c']
+
+>>> a1
+[1, 2, 3, 10, 5]
+
+>>> a1[3] = 200
+>>> a1
+[1, 2, 3, 200, 5]
+
+>>> b1
+[1, 2, 3, 10, 5, 'a', 'b', 'c']  # <---------- Look again
+
+
+###################################################################################################################
+
+>>> 'This' ' ' 'is' ' ' 'a' ' ' 'book'
+'This is a book'            # string concatenation of this kind is done by the parser (during "compile time")
+
+>>> ( 'This is how Python is able to '        # Comment here okay
+... 'handle very very                '        # for very long string extendex across lines
+... 'long strings.'                           # END of long string
+... )
+'This is how Python is able to handle very very                long strings.'
+
+-----------------------------------
+
+Google : how do I print with no newline in Python
+Better : Python print without newline
+
+
+###################################################################################################################
+
+# >>> a = [10, 20, 30, 40]
+# >>> a
+# >>> a.insert( 2, 70 )
+# >>> a
+# >>> a.remove( 3 )
+# >>> a
+# >>> del a[3]
+# >>> a
+# >>> a.remove( 70 )
+# >>> a
+# e.g.,
+syntax check (when possible) when you ENTER
+# e.g.,
+# >>> 5.
+# >>> 5.3.
+# >>> (5).      # since it is said that >>5<< is an object (>>id(5)<< exists too)
+#
+# >>> dict1 = { 10 : 'Taipei', 'Hi' : ( 1,2,3 ), 25.8 : [ 3, [ 4, 5 ] ] }
+# >>> dict1[10]
+# 'Taipei'
+# >>> dict1['Hi']
+# (1, 2, 3)
+# >>> dict1[25.8]
+# [3, [4, 5]]
+# >>> print( dict1.items() )
+# dict_items([(10, 'Taipei'), ('Hi', (1, 2, 3)), (25.8, [3, [4, 5]])])
+# >>> print( list( dict1.items() ) )
+# [(10, 'Taipei'), ('Hi', (1, 2, 3)), (25.8, [3, [4, 5]])]
+# >>> print( list( dict1.keys() ) )
+# [10, 'Hi', 25.8]
+# >>> print( list( dict1.values() ) )
+# ['Taipei', (1, 2, 3), [3, [4, 5]]]
+#
+>>> a = [ 10, 20 ]
+>>> a[0]
+10
+>>> a[1]
+20
+>>> a[2]
+IndexError: list index out of range
+
+>>> a[5] = 100
+IndexError: list assignment index out of range
+
+>>> a[3] = 100
+IndexError: list assignment index out of range
+
+>>> a.insert( 5, 100 )
+>>> a
+[10, 20, 100]
+
+>>> a[3]
+IndexError: list index out of range
+>>> a[2]
+100
+>>> len(a)
+3
+
+>>> "hi there"[3]
+'t'
+>>> (10, 20, 30, 40)[2]
+30
+
+>>> {10, 20, 30, 40}[2]
+<stdin>:1: SyntaxWarning: 'set' object is not subscriptable; perhaps you missed a comma?
+...
+TypeError: 'set' object is not subscriptable
+
+>>> {10:'a', 20:'b', 30:'c', 40:'d'}[2]
+...
+KeyError: 2
+
+>>> {10:'a', 20:'b', 30:'c', 40:'d'}[20]
+'b'
+
+
+
+###################################################################################################################
+
+# (5,) vs. (5)     # the four (?) meanings of '( ... )'
+
+###################################################################################################################
+
+-------------- Parameters : How to meorize - THE FINAL COUNT - written on 2023-11-01 ----------------
+
+Arguments of a function call
+
+  positional
+  keyword
+
+  Rule : Keyworded arguments can only go behind positional arguments (no exception)
+
+Parameters of a function definition
+
+  no-default
+  with default
+
+  /                       # meaning : if there is an argument corresponding to a parameter preceding '/', that argument must be positional
+  *                       # meaning : if there is an argument corresponding to a parameter behind '*', that argument must be keyworded
+
+  *aTuple                 # recall the game PacMan ('aTuple' will "eat up" all the remaining positional arguments)
+  **aDict                 # recall the game PacMan ('aDict' will "eat up" all the remaining keyworded argumebts)
+
+  Rule : A defaulted parameter can only go behind parameters without defaults UNLESS this parameter is behind '*'
+
+  Rule : '**aDict' can only be the last one in the parameter list (of the being defined function)
+
+-------------- END - How to meorize - THE FINAL COUNT - written on 2023-11-01 -------------- 
+
+
+###################################################################################################################
+
+-------------- 'global' and 'nonlocal' : Final Summary written on 2023-10-31 -------------- 
+
+Global and 'global'
+
+1. A global var. x can always be referenced (including x.F()).  # referenced df= appears without being assigned ('=')
+2. If there is an assignment to a (supposed) global var. x, then this assignment to x is considered a declaration of a local var.
+   UNLESS
+   there is a 'global' declaration of this x ABOVE this assignment to x (within the same function).
+
+Implicit rule : a 'global' declaration of x in F() must appear ABOVE any reference to x within F().
+
+Local and 'nonlocal'
+
+1. A function F() can always reference any local var. x of its NEAREST ancestor function (the concept of referencing includes x.F()).
+2. If there is an assignment to a (supposed) local var. x of the NEAREST ancestor function of F(), then this assignment to x
+   is considered a declarationm of a local var. of F()
+   UNLESS
+   there is a 'nonlocal' decarlation of x ABOVE this assignment to x (within F()), and this 'nonlocal' decaration of x signifies that x is in fact the local var. x of the nearest ancestor function of F() that has a local var. x.
+
+Implicit rule : a 'nonlocal' declaration of x in F() must appear ABOVE any reference to x within F().
+
+Rule : For a 'nonlocal' declaration of x in F() to be legal, it is required that AT LEAST ONE of the ancestor functions of F() MUST HAVE a local variable x.   # However, there is no similar requirement for 'global'.
+
+How does the system determines that a var. x is a local var. of F()?
+
+A variable x is considered a local var. of F() 
+IFF
+     there is an assignment to x ANYWHERE within F() (disregarding whether this assignment is within nested conditionals/loops)
+     AND
+     there is no 'global'/'nonlocal' declaration of x ABOVE all references/updates to x (within F()).
+  OR
+     there is a legal 'nonlocal' declaration of x within F() 
+
+# a local var. may be either a "true" local var. or a "false" local var
+# "true" local var. x df= there is an assignment to x within F() and there is no 'global'/'nonlocal' declaration of x in F()
+# "false" local var. x df= there is a 'nonlocal' declaration of x in F()
+
+-------------- END - 'global' and 'nonlocal' : Final Summary written on 2023-10-31 -------------- 
+
+###################################################################################################################
+
+                           Week-0f-1107-ExampleInteractions.txt # all of it
+
+###################################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
