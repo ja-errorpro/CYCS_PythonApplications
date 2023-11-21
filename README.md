@@ -2,4 +2,24 @@
 
 此Repo僅作為課程筆記使用
 
-
+## 課綱進度
+| 週 | 上課日 | 課程單元目標及內容 | 教學法與教學活動 | 評量 |
+|---|:---|:---|:---:|:---:|
+| 1 | 2023-09-12 | 1. Course orientation (what this course is, what this course is not, how this course will proceed, and what to expect from this course ; grading scheme) <br> 2. What makes Python a genuinely high-level language - an initial exposition <br> 3. Python as a "programming-language like" shell-scripting language - back to the original ideal : Part I | In-class presentation and discussion | N/A |
+| 2 | 2023-09-19 | 1. On the side : how the problem of "installed but not found" may be solved <br> 2. Python as a "programming-language like" shell-scripting language - back to the original ideal : Part II | In-class presentation and discussion | Q/A |
+| 3 | 2023-09-26 | Miscellaneous Python features that may be deemed as important : <br> * Exception handling <br> * The use of 'type()' <br> * The issue of NULL (C/C++), null (Java), nil (Lisp/Scheme), and None (Python) <br> * 16 Finxter puzzles (for you to ponder upon along the way) <br> * Try to memorize <br> - % <br> - slice <br> * Python dictionary vs. C++/Java hashmap <br> * List as a universal data structure - a detailed exposition <br> * Numbers, formatted string, and formatted print (Python-printf) - a detailed exposition | In-class presentation and discussion | Q/A |
+| 4 | 2023-10-03 | 1. Some resemblance in constructs and style between CAL (and hsia-idea) and Python <br> 2. How can a language be "genuinely high-level" (again) - Python as the very first and the only example <br> 3. Function annotation and variable annotation - Introduction and discussion | In-class presentation and discussion | Q/A |
+|  | 2023-10-10 | National Holiday (Double Tenth) | N/A | N/A |
+| 5 | 2023-10-17 | Review + code tracing + discussion on the use of ChatGPT (and the like) as coding assistants | In-class presentation and discussion | Q/A |
+| 6 | 2023-10-24 | Parameter passing <br> * What are there <br> * How to remember (rules) <br> * How to use <br><br>Concept of unpacking <br><br> Relating to C's va_list <br><br> How to print without a newline | In-class presentation and discussion | Q/A |
+| 7 | 2023-10-31 | Variables (or rather, names) : Part I <br> * What does "pointer and struct" have to do with the "name-object" paradigm <br> * Variables (or rather, names) can come into existence when ... <br> * Restricted re-declaration of "system variables" <br> * Regarding import <br> * Global var. and local var. VS the use of 'global' and 'nonlocal' | In-class presentation and discussion | Q/A |
+| 8 | 2023-11-07 | Variables (or rather, names) : Part II <br> * dir(), vars(), locals(), globals(), __dict__, and Python-namespace <br> * What variables and functions are there? How can we know how to use these functions? - initial exposition <br> * Everything is an object <br> * if __name__ == "main" <br> * What are the other types that we have <br> * public/private/protected/'_'/'__' ; static/non-static <br> * Style requirements for programmers with different levels of expertise | In-class presentation and discussion | Q/A |
+| 9 | 2023-11-14 | Review and exam | Review and exam | Exam |
+| 10 | 2023-11-21 | Everything is an object (again) <br> * Regarding "class-objects" <br> * Regarding "module-objects" <br> * Regarding "function-objects" <br><br> Revisiting Python's insistence on "No values, just objects!" <br><br> How does argparse create new fields of arbitrarily decided names for the objects that it creates? <br><br> Python idea of classes and objects are completely unlike that of C/C++/Java | In-class presentation and discussion | Q/A |
+| 11 | 2023-11-28 | What does it mean in Python when you call a function (or something that looks like a function)? <br><br> More on Python import <br><br> Review, including 「What functions and variables are there, and how to use them」- a more detailed exposition | In-class presentation and discussion | Q/A |
+| 12 | 2023-12-05 | Python for-loops, iterators, iterables, generators, generator expressions, enumerate and comprehensions : Part I | In-class presentation and discussion | Q/A |
+| 13 | 2023-12-12 | Python for-loops, iterators, iterables, generators, generator expressions, enumerate and comprehensions : Part II | In-class presentation and discussion | Q/A |
+| 14 | 2023-12-19 | Think the Python way : A look back | In-class presentation and discussion | Q/A |
+| 15 | 2023-12-26 | When functions are allowed to return functions ... - from decorators to "class methods" and "static methods" <br><br> Correct and incorrect ways of writing the methods of a class <br><br> The 'with' construct <br><br> Regarding 'NotImplemented' <br><br> Lambda expressions and 'map' <br><br> Metaclass??? | In-class presentation and discussion | Q/A |
+| 16 | 2024-01-02 | Code tracing practice | In-class presentation and discussion | Q/A |
+| 17 | 2024-01-09 | Review and exam | Review and exam | Exam |
