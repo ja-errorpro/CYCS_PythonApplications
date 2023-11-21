@@ -815,6 +815,176 @@ What about 'nonlocal' declarations？
 
 #############################
 
+############################# Final Summary written on 2023-10-31, revised on 2023-11-17 #############################
+
+Note : 
+  Below, when we write 'local var.', we mean either a genuine var or a fake local var.
+
+genuine var. x 
+  df= there is an assignment stmt in F() that assigns to x and there is no corresponding 'global'/'nonlocal' declaration of x in F()
+
+fake local var. x 
+  df= there is a legal 'nonlocal' declaration of x in F()
+
+A 'nonlocal' declaration of x (in a function F()) is legal
+  if
+  x is a local var. of some nearest ancestor function of F()
+
+Parent function and child function :
+
+  If the definition of F() includes the definition of G(), 
+    then F() is the parent function of G() and G() is a child function of F().
+
+Ancestor function and descendent function :
+
+  If F() is the parent function of G(), 
+    then F() is an ancestor function of G() and G() is a descendent function of F().
+
+  If F() is an ancestor function of G() and G() is an ancestor function of H(),
+    then F() is an ancestor function of H() and H() is a descendent function of F().
+
+Rule : a 'global'/'nonlocal' declaration of x in F() must appear ABOVE any statement/expression of F() in which x appears.
+
+Implicit rule : a variable cannot be declared to be both 'global' and 'nonlocal' in the same function.
+
+-----------
+
+Global var, nonlocal var, 'global', and 'nonlocal'
+
+1. A global var. x can be referenced (including x.F()) anywhere.  # referenced df= appears without being assigned ('=')
+   # Case in point : no 'global x' is needed in order for a function to reference a global variable x (assuming that the object named by 'x' already exists in the execution environment when this object is to be referenced by the system via 'x').
+
+2. A function F() can always reference a local var. x of some NEAREST ancestor function (note : the concept of referencing includes x.F()).
+   # Case in point : no 'nonlocal x' is needed in order for a function to reference a local variable x of its nearest ancestor function (assuming that the object named by 'x' already exists in the execution environment when this object is to be referenced by the system via 'x').
+
+3. Whenever there is an assignment to a variable x in F(), then
+
+   case I : there is no corresponding 'nonlocal'/'global' declaration of x in F() (ABOVE this assignment)
+            
+     x is a (re-)declaration of a ("true") local variable of F().
+
+   case II : there is a corresponding 'global' delaration of x in F() (ABOVE this assignment)
+
+     x is a (re-)declaration of a global variable.
+     # Case in point : the object named by 'x' does not have to exist in the execution environment before this assignment to x is executed.
+
+   case III : there is a corresponding 'nonlocal' delaration of x in F() (ABOVE this assignment)
+
+     x is a (re-)declaration of a local variable of the nearest ancestor function.
+     # Case in point : the object named by 'x' does not have to exist in the execution environment before this assignment to x is executed.
+
+Here is a recap of how the system determines whether a var. x is a local var. of F() :
+
+A variable x is considered a local var. of F() 
+
+```
+IFF
+     there is an assignment to x ANYWHERE within F() (disregarding whether this assignment is within nested conditionals/loops)
+     AND
+     there is no 'global'/'nonlocal' declaration of x ABOVE all references/updates to x (within F()).
+  OR
+     there is a legal 'nonlocal' declaration of x within F() 
+```
+
+！！！ It is possible that 「a local var. (of a function F) does not already exist at some point when F() is being executed」 ！！！
+
+      (i.e., 有可能「在F()的執行過程之中、起碼到某一點為止、F()的某個區域變數x並不存在」，此狀況即使是fake local var. of F()也一樣成立)
+
+「x is a local var. of F()」 是個文法上的概念(a syntactical concept) (亦即、這是用「文法檢查」所決定的)  # 「x 是不是 F() 的區域變數」 是個 「文法上的概念」
+
+「whether the local var. x of F() exists or not」is a run-time concept   # 「系統在run的時候到底有沒有x這個東西存在於系統之中」 是個 「執行上的概念」 
+ # (在F()執行的過程之中)執行print( locals() )就知道「目前whether the local var. x of F() exists or not」 # 「existence of x」is a run-time concept
+
+BTW :
+
+  每次我們要reference一個x的值時、系統怎麼知道"x unbound"？ 
+
+  The "variable search process" :
+  
+    from the enclosing function (its local names), to the nearest enclosing function (its local names), to the next enclosing function (its   local names), etc., to the current module's global names, and finally to the namespace containing the built-in names of the Python   interpreter
+
+  亦即：系統先看(目前這function)的local vars，如果沒有、就看目前這function的parent function的local vars、一層一層找上去、一直找到globals()為止，找到就取其值(嚴格來說應該是「retrieve所name的object」才對)，找不到就"x unbound".
+
+  # 看起來、locals()所return的、是「先列(目前這function)的local vars，然後列目前這function的parent function的local vars、一層一層上去、一直到列出最外層function的local vars為止」。所以，每次當我們要取x的值時，系統的作法是(起碼在理論上是同等於)：先呼叫locals()、看所得到的dict之中有沒有x，如果沒有、就再呼叫globals()、看所得到的dict之中有沒有x，如果沒有、就"x unbound"。
+
+  # 請注意以下的documentation可能會誤導人：
+  ```sh
+  >>> help( locals )
+  Help on built-in function locals in module builtins:
+  
+  locals()
+      Return a dictionary containing the current scope's local variables.
+      
+      NOTE: Whether or not updates to this dictionary will affect name lookups in
+      the local scope and vice-versa is *implementation dependent* and not
+      covered by any backwards compatibility guarantees.
+
+  >>> def F() :                # F()的程式碼之中有'x = ...'、而且也沒相關的'global'/'nonlocal'宣告，所以「x是F()的local var」無誤
+  ...   def F1() :
+  ...     nonlocal x
+  ...     print( locals() )    # 第一次被呼叫時locals()所return的dict應該什麼都沒有，因為連F()的x也還都不存在
+  ...     y = 10               # F1()自己的local var y是從現在開始(才)存在
+  ...     print( locals() )    # locals()所return的dict之中有加入y
+  ...   # END - F1()
+  ...   
+  ...   F1()                   # 此時(F()的)x還不存在
+  ...   x = 100                # (F()的)x是從現在才開始存在
+  ...   F1()
+  ...   
+  ...   # END - F()
+  ... 
+  >>> F()
+  {}
+  {'y': 10}
+  {'x': 100}
+  {'x': 100, 'y': 10}
+  >>> 
+  
+  >>> def F() :                # F()的程式碼之中有'x = ...'、而且也沒相關的'global'/'nonlocal'宣告，所以「x是F()的local var」無誤
+  ...   def F1() :
+  ...     nonlocal x, count            # 所以，F1()之中出現的x是某個ancestor function(碰巧是F())的local var
+  ...     count += 1
+  ...     print( 'F1() :', locals() )
+  ...     y = 10
+  ...     print( 'F1() :', locals() )
+  ...     x = 50                       # 請注意F()的local var x是從現在開始(才)存在
+  ...     print( 'F1() :', locals() )
+  ...     if count > 1 :
+  ...       print( 'Printing z in F1() : ', z )  # 可reference到(但不可能update到、除非有作nonlocal宣告) ancestor function的local var
+  ...   # END - F1()
+  ...   
+  ...   count = 0
+  ...   print( 'F() :', locals() )     # 此時count有存在、但x還不存在
+  ...   F1()                           
+  ...   print( 'F() :', locals() )     # x開始存在(但不可能有y這個東西)
+  ...   x = 100
+  ...   print( 'F() :', locals() )
+  ...   z = 200                        # 來一個正宗的(F()的)local var
+  ...   F1()
+  ...   print( 'F() :', locals() )
+  ... 
+  >>> # F() has 3 locals : count, x, and z ; 
+  >>> # F1() has 1 local y and 2 nonlocals : count, x  
+  >>> # z is referenced by F1() but z is neither a local of F1() nor a nonlocal of F1()
+  >>> 
+  >>> F()
+  F() : {'F1': <function F.<locals>.F1 at 0x7ff6f829ef70>, 'count': 0} # 'count' assigned, therefore exists ; note that there is no 'x'
+  F1() : {'count': 1}
+  F1() : {'count': 1, 'y': 10}                    # 'y' assigned, therefore exists
+  F1() : {'count': 1, 'y': 10, 'x': 50}           # 'x' assigned in F1() ; now it exists
+  F() : {'F1': <function F.<locals>.F1 at 0x7ff6f829ef70>, 'count': 1, 'x': 50}   # Back to F(), 'x' now exists
+  F() : {'F1': <function F.<locals>.F1 at 0x7ff6f829ef70>, 'count': 1, 'x': 100}
+  F1() : {'count': 2, 'x': 100, 'z': 200}   # Note that 'z' is neither a local of F1() nor a nonlocal of F1() ; but is in locals() of F1()
+  F1() : {'count': 2, 'x': 100, 'z': 200, 'y': 10}
+  F1() : {'count': 2, 'x': 50, 'z': 200, 'y': 10}
+  Printing z in F1() :  200                 # Just to show that 'z' of F() can be referenced in F1() ; also note that it is in locals() here
+  F() : {'F1': <function F.<locals>.F1 at 0x7ff6f829ef70>, 'count': 2, 'x': 50, 'z': 200}
+  >>> 
+  ```
+
+############################# END - Final Summary written on 2023-10-31, revised on 2023-11-17 #############################
+
+
 # Example 3 # An exploration of the meaning of 'nonlocal'
 
 # non-verbose version

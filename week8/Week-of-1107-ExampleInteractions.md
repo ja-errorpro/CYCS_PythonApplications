@@ -82,6 +82,7 @@ vars()   # = locals()
 
 #########################################################################################
 
+```sh
 > python3.9 -i ~/bin/StartUpScript.py
 
 >>> print('\nPython %s on %s' % (sys.version, sys.platform))
@@ -175,9 +176,11 @@ FinalPrepare			PycharmProjects			Virtual Machines.localized	vmware-share
 
 
 > python3.9 -i ~/bin/StartUpScript.py
+```
 
 ############ What will happen to a 'nonlocal'? ############
 
+```sh
 >>> def Test0() :
 ...   def Test01() :
 ...     
@@ -232,9 +235,11 @@ locals() :
 globals() : 
 ['B', 'S', 'Test0', '__annotations__', '__builtins__', '__doc__', '__loader__', '__name__', '__package__', '__spec__', 'os', 'pprint', 'subprocess', 'sys']
 ----- END - Test01() -----
+```
 
 ############ When a 'nonlocal' starts to exist in a descendent function ... ############
 
+```sh
 >>> def Test1() :
 ...   def Test11() :
 ...     
@@ -294,9 +299,11 @@ globals() :
 
 >>> sorted( globals() )
 ['B', 'S', 'Test0', 'Test1', '__annotations__', '__builtins__', '__doc__', '__loader__', '__name__', '__package__', '__spec__', 'os', 'pprint', 'subprocess', 'sys']
+```
 
 ############ So, what about 'global gA' ? ############
 
+```sh
 >>> def Test3() :
 ...   def Test31() :
 ...     
@@ -363,6 +370,7 @@ globals() :
 
 >>> dir()
 ['B', 'S', 'Test0', 'Test1', 'Test3', '__annotations__', '__builtins__', '__doc__', '__loader__', '__name__', '__package__', '__spec__', 'gA', 'os', 'pprint', 'subprocess', 'sys']
+```
 
 
 #########################################################################################
@@ -394,6 +402,7 @@ dir( <object> ) 與 vars( <object> ) 的同與異
 
 #########################################################################################
 
+```sh
 >>> dir()
 ['B', 'S', 'Test0', 'Test1', 'Test3', '__annotations__', '__builtins__', '__doc__', '__loader__', '__name__', '__package__', '__spec__', 'gA', 'os', 'pprint', 'subprocess', 'sys']
 
@@ -468,6 +477,7 @@ __add__(self, value, /)
     Return self+value.
 (END)
 >>> # the '!!!' comment at the beginning of a function definition
+```
 
 #########################################################################################
 
@@ -503,6 +513,7 @@ __add__(self, value, /)
 
 # A 「function definition」 (≠ the execution of this function) is an object
 
+```sh
 >>> dir()
 ['B', 'S', 'Test0', 'Test1', 'Test3', '__annotations__', '__builtins__', '__doc__', '__loader__', '__name__', '__package__', '__spec__', 'gA', 'os', 'pprint', 'subprocess', 'sys']
 
@@ -540,11 +551,13 @@ locals() :
 globals() : 
 ['B', 'S', 'Test0', 'Test1', 'Test3', '__annotations__', '__builtins__', '__doc__', '__loader__', '__name__', '__package__', '__spec__', 'gA', 'os', 'pprint', 'subprocess', 'sys']
 ----- END - Test01() -----
+```
 
 ###########
 
 # Does the system store the local namespace (of an execution instance) in the __dict__ of a function definition? Probably not！
 
+```
 >>> def Test4() :   # Modified from Test1()
 ...   def Test41() :
 ...     
@@ -669,11 +682,13 @@ seed(a=None, version=2) method of random.Random instance
     bytes, or bytearray.  For version 1 (provided for reproducing random
     sequences from older versions of Python), the algorithm for str and
     bytes generates a narrower range of seeds.
+```
 
 ############
 
 # The 「Class object」
 
+```sh
 >>> class Class123 :
 ...   
 ...   classDataMember123 = 10          #
@@ -836,14 +851,15 @@ True
 
 >>> (5).bit_count()
 2
+```
 
 #########################################################################################
 
-～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+---
 
                           if __name__ == "__main__"
 
-～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+---
 
 # Why do we often see something like the following (usually located at the end of (the top-level of) a module)
 #   if __name__ == "__main__"
@@ -853,6 +869,7 @@ True
 
 #########################################################################################
 
+```sh
 >>> sys.path
 ['/Users/wang/bin', '/Users/wang/bin', '/Users/wang', '/Users/wang/opt/anaconda3/lib/python39.zip', '/Users/wang/opt/anaconda3/lib/python3.9', '/Users/wang/opt/anaconda3/lib/python3.9/lib-dynload', '/Users/wang/opt/anaconda3/lib/python3.9/site-packages', '/Users/wang/opt/anaconda3/lib/python3.9/site-packages/aeosa']
 
@@ -1181,11 +1198,13 @@ All Rights Reserved.,
  '_dOfFandC_',
  'aOfFandC',
  'bOfFandC_']
+ ```
 
 #########################################################################################
 
                            ### Class and object in Python ###
 
+```sh
 >>> class Class123 :
 ...   
 ...   classDataMember123 = 10          
@@ -1424,6 +1443,7 @@ AttributeError: 'str' object has no attribute 'classDataMember123'
 # The execution of Class123.InstanceMethod123( "anything here" ) was partially successful.
 # WHY?
 # The system eventually raised an error-exception. What happened?
+```
 
 #########################################################################################
 
@@ -1534,6 +1554,7 @@ Class static data member (即class data member) ：
 
 #############################
 
+```sh
 # Note by wang : The following was copied from a previous class note, followed by doing some modifications in the system-output-part.
 #                Therefore, there may be some discrepancy between the system output shown here and the real system output.
 
@@ -1674,11 +1695,13 @@ Value of __gOfFandC__ : 75
 # 說起來也蠻好笑的...，既然一旦import *進來就完全變成另外一個人，又何必在乎名稱是否是以'_'作為開頭(反正也改不到原來的那個)？
 
 # 那個重複import *所得的結果又要如何在abstract-level解釋清楚？？？
+```
 
 #############################
 
 # Let us now turn our attention to a different question - does Python support the notion of private or protected or "class/function static"?
 
+```sh
 >>> class Class1 :
 ...   
 ...   # class data members (three underlines following the name) declared (= assigned) here
@@ -1813,6 +1836,7 @@ Value of __f123 : 65
 
 # Quick recap : Python does have class-static, but it does not offer private/protected-like protection for class/instance data members.
 # I believe the same is true for class/instance member functions (= methods)
+```
 
 Q : 為何module-static的data不比照instance-data或class-data的作法、以name mangling的方式來多少使user感到不方便、從而discourage user對這些data(即名字是雙底線開頭至多單底線結尾的data)的access？  或者反過來說，為何instance-data或class-data不比照module-static data的作法、乾脆讓user"看不到"(因此就無法access)？
 
@@ -1859,6 +1883,242 @@ Function分三種：
 ～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
 
 Discussions.
+
+############################# Final Summary written on 2023-11-10, revised on 2023-11-20 #############################
+
+Python認為：
+
+  Function就是function，不該有"module function", "class function"與"instance function"的區別！
+
+  同理，data (or name)就是data (or name)，不該有"module data", "class data"與"instance data"的區別！
+
+  F()、module1.F()、class1.F()、class1_instance.F()都是同一"種類"的functions，而且Python的functions就那麼一個種類而已、沒有不同的種類。我們只是有不同的「命名規矩」而已，而「命名規矩的不同」並不意味著這些「使用不同命名方式取名字的functions」事實上是不同種類的functions。
+
+  任何function都有一個「所屬module」、此「所屬module」就是「內中有列出此function之定義」的那個檔案。(請注意：「the fictitious top-level」也視同一個"檔案")。
+    --
+    (請注意：「from ModuleABC import *」的意義分兩部分，對ModuleABC的屬性data而言，「from ModuleABC import *」是在run完ModuleABC之中的程式碼之後、先是在目前所屬module之中重新create同名字的屬性data、然後再將「ModuleABC之中的x之值」copy成為「『目前所屬module』之中的x之值」，而這是個pointer assignmenbt。 那ModuleABC的屬性function怎麼辦？對ModuleABC的屬性function而言，「from ModuleABC import *」只是create aliases而已；也就是說、以ModuleABC之中的function F()為例、雖然看似「目前所屬module」來了這麼一個function F()，但事實上這F()依舊是ModuleABC.F()、而並不真的是「『目前所屬module』的(新的)『屬性function』F()」，只是說、我們在呼叫ModuleABC.F()之時只要寫「F()」就可以了；重點：在「from ModuleABC import *」或「from ModuleABC import F」之後，ModuleABC原有的F()並沒有真的成為「目前所屬module」的屬性function，它(F())依舊是ModuleABC的屬性function；但屬性data的部分就不一樣了，在「from ModuleABC import *」之後，ModuleABC原有的屬性data x (which is a pointer variable)的值會copy成為「新產生的、同名字的、『目前所屬module』的屬性data x」的值)
+    --
+    (一般的建議是「不要寫『from ModuleABC import *』(除非有很好的理由要這樣做)！ 寫『from ModuleABC import F』 或 『import ModuleABC』就好！」。原因有三，一是「覆蓋」、「目前所屬module」原有的屬性function會被同名字的外來aliases所覆蓋掉(這與C/C++/Java的規矩完全相反)，二是若想"update ModuleABC的屬性data"可能會產生confusion、請見下文的(9)，三是「pointer assignment」所導致的後果也是很容易產生confusion（"「新產生的、同名字的、『目前所屬module』的屬性data x」與ModuleABC原有的屬性data x的關係到底是什麼？"）)
+    --
+    (Quiz : 在執行「aOfFandC = 55 ; testFC.newF = lambda : print( aOfFandC )」之後，testFC.newF()所印出的aOfFandC是testFC.aOfFandC還是aOfFandC？)
+    --
+  任何function在執行時都有globals，而這些globals就是「此function之『所屬module』」的「屬性data」(與「屬性functions」) # 「global宣告」對二者都適用
+
+    # 純好奇：根據本人對Python的哲學的了解，應該會...
+
+    ```sh
+    >>> def F123() :
+    ...   print( 123 )
+    ... 
+    >>> def F456() :
+    ...   global F123
+    ...   F123 = lambda : print( 456 )   # recall the 'lambda' of OurScheme ...
+    ... 
+    >>> F123()
+    123
+    >>> F456()
+    >>> F123()
+    456
+    # "Yes！" (我們這種人都是很無聊的！Don't you think so？)
+    ```
+
+  倒是object的概念要尊重！
+
+    有些objects是primitive objects (primitive objects事實上是其他語言中的values)。
+
+    除了primitive-objects之外，每個object都可以有它「自有的data」(即所謂的「屬性data」)與「屬性function」。
+    # Primitive objects沒有「屬性data」，不過它們有「屬性function」。
+
+    屬性又分作「genuine屬性」與「衍伸屬性」兩種。「genuine屬性」是object「自有」者，「衍伸屬性」則來自其他地方、只是可透過此object reference之而已。
+
+    原則上，只要呼叫 vars( anObj ) 就可知道 anObj有哪些generic屬性(包括「generic屬性data」與「generic屬性function」)。
+    
+    「屬性data」是(任何人都)可以reference的，「屬性function」則是(任何人都)可以呼叫的。    # i.e., "public", as it is called in other languages
+
+    而且「一個object有哪些屬性」這件事是可以調整的。 Just do : anObj.b = ... 或 del anObj.b 
+     # 任何object都是如此 (不管是instance-obj還是class-obj還是module-obj還是func-obj)
+
+    如果一個object是經由a = Some()被創造出來的，那它在被創造出來的時候就會(依據Some這個class的定義)具有某些屬性。
+    凡是經由a = Some()被創造出來的objects，我們統稱之為instance-objects。
+
+    instance-objects的屬性分作「genuine屬性」與「衍伸屬性」兩種： # 有點類似function在執行時的local var有「genuine local var」與「fake local var」兩種
+
+      在instance-obj剛被創造出來的時候(也就是 anObj = Some() 剛執行完的時候)、
+
+        相對應的class-object（即Some這個class-object）的「屬性function」就自動成為此instance-obj的 「衍伸屬性function」，
+
+        而所有的「相對應的class-object的『屬性data』」(也就是Some這個class-object的所有「屬性data」)也自動成為instance-obj的「衍伸屬性data」、
+
+          除非在創造此instance-obj時(也就是Some.__init__( anObj, ...)在執行時)有對同名字的屬性作assign的動作(從而使該屬性成為anObj的「genuine屬性」)
+
+    Module也是一種object，不過它不是經由a = Some()創造出來的，Class-objects也不是經由a = Some()創造出來的。
+
+    Function-objects、class-objects、與module-objects這三"種"objects都是經由「定義」的方式而implicitly創造出來的、
+    而不是經由a = Some()這種方式explicitly創造出來的。
+
+    換言之，總共有五種objects : instance-objects, module-objects, class-objects, function-objects, 與primitive-objects。
+           其中instance-objects有呼叫「屬性function」時的特殊待遇( a.F(...) 會被轉換成 Some.F(a, ...) )，
+               而primitive-objects則沒有「屬性data」(但有「屬性function」)
+
+Class-objects的「(default)屬性data」是由其定義決定之，
+
+  e.g.,
+```py
+  class Class1 :
+    data1 = 10
+    data2 = 20
+    def __init__( self ) :
+      ...
+    def F() :
+      ...
+    ...
+```
+  就決定
+
+  'Class1'所name的class-object有'data1'與'data2'這兩個屬性data
+
+a = Class1() 除了產生一個 ('a'所name的) instance-object (an instance of Class1) 之外、也有implicitly呼叫 Class1.__init__( a )。
+
+以上就是幾乎所有「Python有關OOP的設計」。  # 也許再加上繼承的概念與一些'from ModuleABC import *'的限制與name-mangling的特殊設計。  That's all！
+
+# 不過還是要談一下「如何(正確的)定義一個class以及其衍伸class」
+
+```sh
+>>> class Test :
+...   x = 10                         # class-object (即Test) 的(default)屬性data是寫在這裡
+...   def __init__( self ) :         # 在此constructor產生self(supposedly是個此class的instance-object)的(default)屬性data
+...     self.x1 = 10                 #   例如x1與下面這一行的y1
+...     self.y1 = self.x1 + self.x   # x(只要是reference而非update) 事實上是 self的「衍伸屬性data」(Test的屬性data)
+...     z1 = 100                     # z1只是__init__()的區域變數
+...   def F( whatever ) :
+...     print( whatever.x )
+...   def G() :
+...     print( Test.x )
+... 
+>>> test = Test()
+
+>>> sorted( vars( Test ) )   # Test的generic屬性(包括generic屬性functions)
+['F', 'G', '__dict__', '__doc__', '__init__', '__module__', '__weakref__', 'x']
+
+>>> sorted( Test.__dict__ )  # 只是要證明'vars( Test )'事實上是直接return Test.__dict__
+['F', 'G', '__dict__', '__doc__', '__init__', '__module__', '__weakref__', 'x']
+
+>>> sorted( vars( test ) )  # test這個instance-obj的generic屬性(注意沒有generic屬性function)
+['x1', 'y1']
+
+>>> dir( test )             # test這個instance-obj的衍伸屬性(包括衍伸屬性functions)
+['F', 'G', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'x', 'x1', 'y1']
+
+>>> dir( Test )             # 只是要show「test這個instance-obj的所有衍伸屬性都是來自Test(的衍伸屬性)」
+['F', 'G', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'x']
+
+
+>>> class RefinedTest( Test ) : # RefinedTest是Test的衍伸class (它也可以是 Test1, Test2, Test3 三者共同的衍伸class ; 只要三者都有出現於參數區即可)
+...   refined_x = 10            # 「class-object的『屬性』的繼承」是自動的(亦即：RefinedTest這個class-object不用做任何事就會有Test的所有屬性)
+...   def __init__( self ) :    
+...                             # 「instance-object的『屬性data』的繼承」則必須要靠「呼叫上一層的constructor」才行
+...     super().__init__()      # For any call to this __init__() such as a.__init__(), execute a.__init__() here ;
+...                             #   however, the __init__() being called this time is the one defined in the parent class
+...                             # This way of doing things is to mimic the use of 'super()' in a Java constructor
+...     # 也就是 Test.__init__( self ) ； 事實上左邊這個寫法較好(不用硬加一些如上的ad hoc觀念)、也比較general
+...     
+...     self.refined_x1 = 10
+...     self.refined_y1 = self.x1 + self.x   # x是個自動有的衍伸屬性data(它是RefinedTest的衍伸屬性data)； x1則要靠呼叫Test.__init__( self )才會有
+...     z1 = 100
+...   def Refined_F( whatever ) :
+...     print( whatever.refined_x )
+...   def Refined_G() :
+...     print( Test.refined_x )
+...   def G() :
+...     pass
+... 
+>>> 
+>>> refined_test = RefinedTest()
+
+>>> sorted( vars( RefinedTest ) )  # generic屬性
+['G', 'Refined_F', 'Refined_G', '__doc__', '__init__', '__module__', 'refined_x']
+
+>>> dir( RefinedTest )             # generic屬性 + 衍伸屬性
+['F', 'G', 'Refined_F', 'Refined_G', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'refined_x', 'x']
+
+>>> vars( refined_test )           # generic屬性(注意沒有generic屬性functions)
+{'x1': 10, 'y1': 20, 'refined_x1': 10, 'refined_y1': 20}
+
+>>> dir( refined_test )            # generic屬性 + 衍伸屬性
+['F', 'G', 'Refined_F', 'Refined_G', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'refined_x', 'refined_x1', 'refined_y1', 'x', 'x1', 'y1']
+
+>>> RefinedTest.G()   # G() has been overridden in RefinedTest  # 「覆蓋」這件事、在Python倒是蠻自然的(Python根本就是以「覆蓋」為業，到處都可以覆蓋！)
+>>> 
+```
+
+請注意：
+
+在  任何function  的  執行過程之中...
+
+1. 你不可能經由 self.class_x = ... (或 obj.class_x = ...) 的方式  來  更改(update)  self(或obj)所屬class的class-obj  的  class_x屬性 
+   唯有使用  Class1.class_x = ...  的方式  才能  更改(update)到  self(或obj)所屬class的class-obj(即Class1)  的  class_x屬性
+
+2. 本來 ancestor function的local var. 與 所屬module的屬性data(即所謂的global data) 也是一樣的狀況、甚至更糟(因為根本無法update這些local var與global var)
+   而這就是Python提供'nonlocal'與'global'宣告的原因！(讓我們能在一個function執行的過程之中  更改  ancestor function的local var. 與  所屬module的屬性data)
+
+   (Quiz : 可以透過'nonlocal'宣告 來 更改 ancestor function的local function的定義 嗎？)
+
+---------------------------
+
+1. 再一次強調：Assign(一個東西給一個name)即宣告(這個name於「目前的namespace」之中)、除非有在此assignment上方作'nonlocal'或'global'宣告。
+             而且只要function中有這麼一個statement(不管出現在function的哪一部分)就算數，Python並沒有要求一定要執行到這個assignment stmt才算數。
+
+             注意Python並沒有把「宣告」與「存在」視為同一回事。
+             前者是個「文法檢查的概念」，後者則是個「執行環境的概念」。
+             此二者有可能同時發生、也可能不同時發生。
+
+     # Python所謂的namespace，就只是一個「a set of names」(而已)
+
+     # A Python-namespace可能是module(-object)的屬性 (其中的「屬性data」、對屬於這個module的functions而言是global var.)、
+       也可能包括function()在執行時的local var.與para.、 # Python的conditionals與loops沒有自己的local vars ; local var.只有function才有
+       也可能是某個instance-obj的屬性(包括「屬性data」與「屬性function」)、
+       也可能是某個class-object的屬性(包括「屬性data」與「屬性function」)、
+       也可能是某個function-object的「屬性data」 (看不出有什麼用就是了)
+
+2. vars( anObj ) 可以 show anObj 的 namespace                     # 即anObj的屬性 目前有哪些、以及其值為何
+   locals() 可以 show 「目前正在執行的這個function」 可 reference的"local names" (≠ local vars)  # 目前有哪些、以及其值為何
+   # 請注意以上兩個是完全不一樣的概念。一個是function在執行時的temporary data，一個是permanent data (只要object存在就有、而objects一經產生就理論上永遠存在)
+   # 後者有包括到前者，前者不可能牽涉到後者
+
+3. def vars( anObj ) :        # 事實上是
+     return anObj.__dict__    # That's all, folks!
+
+4. 也就是說、如果我們能更動 anObj 的 __dict__ 這個"屬性"的內容，我們就能改變 anObj的屬性
+
+   e.g., anObj.__dict__['x'] = 100
+
+5. "primitive objects"(Python版的"values")  沒有  __dict__ 這個"屬性"； 
+
+   # 每一個「執行中的functions」(即call-stack上的每一個activation records)應該都有一個類似 __dict__ 的東西，但system不show它 (for very good reasons)
+   
+6. 有些objects (如class objects) 的 __dict__ 、系統不讓我們(輕易？)改。
+
+7. 'x = x + 1'有可能會導致error，因為尚未宣告x就要取其值。但如果ancestor function已有設定x這個local就可以。
+   但此時'x = x + 1'並不是改變ancestor function的x (假設並沒有作'nonlocal'的宣告)，而是宣告一個local x。
+
+8. 同理，'self.x = self.x + 1'有可能會導致error，因為尚未宣告self的x就要取其值。但如果所屬class已有設定x這個data就可以。
+   但此時'self.x = self.x + 1'並不是改變所屬class的x，而是宣告一個self的instance data x。
+
+9. 同理，假設ModuleABC之中有moduleABC_x這個屬性data，'from ModuleABC import * ; moduleABC_x = moduleABC_x + 1'
+   並不會改變ModuleABC的moduleABC_x，而是宣告一個「目前所屬module」的屬性data moduleABC_x。
+
+10. 在任何地方、只要系統允許我們改anObj的__dict__ (e.g., anObj.__dict__['x'] = 100)，我們就可以 anObj.x = 100 ；
+    二者的效果是一樣的。
+
+    而且系統並「不」要求「anObj必須已經有x這個instnace data」才能這樣改其值。
+
+    也就是說，我們事實上可以任意增加一個object (be it a module or a class or an instance of a class) 的屬性。Just do : anObj.x = ...
+    也可以任意去掉一個object (be it a module or a class or an instance of a class) 的屬性。 Just do : del anObj.x    
+
+    # 當然， we can also delete a local var (or 某object的屬性) inside any function
+    # Just do : del x (or del self.x, or del os.happy)
+
+############################# END - Final Summary written on 2023-11-10, revised on 2023-11-20 #############################
 
 
 #########################################################################################

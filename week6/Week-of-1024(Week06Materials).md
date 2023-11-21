@@ -1209,5 +1209,41 @@ Should there be syntax restrictions for different levels of software development
 
 --------------------------------
 
+######################## How to meorize - THE FINAL COUNT - written on 2023-11-01, revised on 2023-11-21 ########################
+
+Arguments of a function call
+
+  positional
+  keyword
+
+  Rule : Keyworded arguments can only go behind positional arguments (no exception)
+
+Parameters of a function definition
+
+  no-default
+  with default
+
+  /                       # meaning : if there is an argument corresponding to a parameter preceding '/', that argument must be positional
+  *                       # meaning : if there is an argument corresponding to a parameter behind '*', that argument must be keyworded
+
+  *aTuple                 # recall the game PacMan ('aTuple' will "eat up" all the remaining positional arguments)
+  **aDict                 # recall the game PacMan ('aDict' will "eat up" all the remaining keyworded argumebts)
+
+  Rule : A defaulted parameter can only go behind parameters without defaults UNLESS this parameter is behind '*'
+
+  Rule : '**aDict' can only be the last one in the parameter list (of the being defined function)
+
+```sh
+>>> def F( a=10, b=20, *Tuple, c=30, d ) :
+...   print( a, b, aTuple, c, d )
+... 
+>>> 
+>>> F( 100, 200, 300, 400, 500, 600, d = 700 )
+100 200 (300, 400, 500, 600) 30 700
+```
+
+######################## END - How to meorize - THE FINAL COUNT - written on 2023-11-01, revised on 2023-11-21 ########################
+
+
 
 
