@@ -1,0 +1,1038 @@
+Week-of-1226(Week15Materials).txt
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+When functions are allowed to return functions ... - from decorators to "class methods" and "static methods"
+
+Correct and incorrect ways of writing the methods of a class
+
+The 'with' construct
+
+Regarding 'NotImplemented'
+
+Lambda expressions and 'map'
+
+Metaclass???
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+When functions are allowed to return functions ... - from decorators to "class methods" and "static methods"
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+# Python-WeekSecond-05-SomeDay.txt (Lines 2493-2941)
+
+  When a function is allowed to not only accept functions as its arguments but also return functions as its return values ...
+
+          ★★★ Currying, decorators, and the difference between "class methods" and "static methods" ★★★
+
+
+------------- 1. The concept of Currying in mathematics -------------
+
+
+Let F( x, y ) be the following function :
+
+F( x, y ) df= ... x ... y ... x ... x ... y ...
+
+# For any x-value a and any y-value b, F(a,b) is a value computed by evaluating the formula : ... a ... b ... a ... a ... b ...
+
+Currying this function F means constructing the following function G(x).
+
+For any x-value a, G(a) is the following FUNCTION (call it G11) G11(y) df= ... a ... y ... a ... a ... y ...
+
+# Thus, for any x-value a and y-value b, G(a)(b) = ... a ... b ... a ... a ... b
+# First, we get G(a). Then, we apply G(a) to b.
+
+Putting all these into computational terms ...
+
+任何接受兩個參數x與y的function F(x,y) (假設是def F( x : int, y : int ) -> int : ... x ... y ...)，我們都可以把它改寫成一個function G(x) ; 呼叫G(35)所得的結果是一個function，我們給此function一個名字好了: OutputOfG (i.e., OutputOfG = G(35))、則OutputOfG是如下的function (def OutputOfG( y : int ) -> int : ... 35 ... y)，而、如果我們呼叫OutputOfG( 100 ), which is equivalent to calling G(35)(100)，我們所得到的值將是系統evaluate '... 35 ... 100 ...'所得之結果。
+
+換言之，我們永遠可以由一個雙參數的function F()定義出一個單參數的function G()，而  a = F(35, 100)  與  OutputOfG = G(35) ; a = OutputOfG(100)  與  a = G(35)(100)  都一樣會把'a' bind to the same object。
+
+這種做法、在數學上稱之為Currying。
+
+雖然看起來很無聊，重點是：把一個「N參數function」的呼叫、改為N個串在一起的「單參數function」的呼叫、而得到一模一樣的結果。
+
+# 數學的部分結束。Now let us turn to Python implementations of the mathematical concept of Curring.
+
+2. Implementing Curring operations in Python ...
+
+### Example 1 ###
+
+The original function F ...
+
+def F( x, y ) :
+  return x + y           # whatever code is here, in this code body
+
+Result of Curring F (call it G) ...
+
+def G( x ) :
+  
+  def OutputOfG( y ) :
+    return x + y         # just copy that code body to here
+  
+  return OutputOfG        
+
+>>> def F(x,y) :
+...   return x + y       # whatever code is here, in this code body
+... 
+>>> 
+
+>>> F( 35, 100 )
+135
+
+>>> def G( x ) :
+...   def OutputOfG( y ) :
+...     return x + y      # just copy that code body to here
+...   return OutputOfG
+... 
+>>>
+
+>>> G(35)
+<function G.<locals>.OutputOfG at 0x1054185e0>
+
+>>> G(35)(100)
+135
+
+# or, if you prefer ...
+
+>>> G11 = G(35)
+
+>>> G11
+<function G.<locals>.OutputOfG at 0x105418c20>
+
+>>> G11(100)
+135
+
+### Example 2 ###
+
+原function F ...
+
+def F( x, y, z ) :
+  return x*y + y*z + z*x        # whatever code is here, in this code body
+
+Result of Curring F (call it G) ...
+
+def G( x ) :
+  
+  def H( y ) :
+    
+    def I( z ) :
+      return x*y + y*z + z*x    # just copy that code body to here
+    return I
+  
+  return H
+
+>>> def F( x, y, z ) :
+...   return x*y + y*z + z*x
+... 
+>>> 
+
+>>> F( 10, 20, 30 )
+1100
+
+>>> def G( x ) :
+...   
+...   def H( y ) :
+...     
+...     def I( z ) :
+...       return x*y + y*z + z*x
+...     return I
+...   
+...   return H
+... 
+>>> 
+
+>>> G
+<function G at 0x105418540>
+
+>>> G(10)           # please describe the execution of this function call
+<function G.<locals>.H at 0x1052d51c0>
+
+>>> G(10)(20)       # please describe the execution of this function call
+<function G.<locals>.H.<locals>.I at 0x10549c5e0>
+
+>>> G(10)(20)(30)    # please describe the execution of this function call
+1100
+
+                     # please describe the execution of '(new C( 5 )).F( 3 )' in Java (or  '(new C( 5 ))->F( 3 )' in C++)
+
+
+------------- 2. The idea of transforming a function F() into a "somewhat more elaborate (in some way)" function G() that "calls F() for you." ------------- 
+
+
+How do we obtain such a G() from F() ?
+
+  Of course by calling a function that accepts a function (as its sole argument) and returns a function (as its return value)！！！
+
+  e.g., G = WonderfulTransformer( F ), where WonderfulTransformer() just accepts one function F and returns another function G
+                                       G is such that (1) it accepts the same arguments that F() was originally designed to accept
+                                       and (2) it can optionally call F() in doing whatever it wants and in whatever ways it sees fit
+                                       # 偷天換日
+
+  more importantly, 
+
+        F = WonderfulTransformer( F )
+
+  # Thereafter, whenever you call F(...) (and you think you are calling F(...) according to F's definition), you are actually making the call WonderfulTransformer(F)(...), which is a perfectly legitimate function call, and it is WonderfulTransformer(F)() that actually "calls F() on your behalf" (and you have no idea how WonderfulTransformer(F) will call F() - e.g., does it call F() three times (and not just one time), each time using a different variation of the given arguments "..."? or what?)
+
+def DoMore( f ) :  # a transformer-function that accepts a function as its argument and returns a more elaborate function
+                   # that calls the argument-function in doing its (the more elaborate function's) work
+  
+  def TransformedFunction( x, y ) :
+    return f(x, y + 5)
+  
+  return TransformedFunction
+
+def Add( x, y ) :
+  return x + y
+
+def Multiply( x, y ) :
+  return x * y
+
+>>> def DoMore( f ) :
+...   
+...   def TransformedFunction( x, y ) :
+...     return f(x, y + 5)
+...   
+...   return TransformedFunction
+... 
+>>> 
+
+>>> def Add( x, y ) :
+...   return x + y
+... 
+>>> 
+
+>>> def Multiply( x, y ) :
+...   return x * y
+... 
+>>> 
+
+>>> Add
+<function Add at 0x1052d51c0>
+
+>>> Multiply
+<function Multiply at 0x10549c860>
+
+>>> DoMore
+<function DoMore at 0x10549c720>
+
+>>> Add( 100, 30 )
+130
+
+>>> Multiply( 100, 8 )
+800
+
+>>> DoMore( Add )
+<function DoMore.<locals>.TransformedFunction at 0x1052d5120>
+
+>>> DoMore( Multiply )
+<function DoMore.<locals>.TransformedFunction at 0x10549c5e0>
+
+>>> DoMore( Add )( 100, 30 )
+135
+
+>>> DoMore( Multiply )( 100, 8 )
+1300
+
+>>> Add = DoMore( Add )
+
+>>> Add
+<function DoMore.<locals>.TransformedFunction at 0x1052d5120>
+
+>>> Add( 100, 30 )
+135
+
+>>> Multiply = DoMore( Multiply )
+
+>>> Multiply
+<function DoMore.<locals>.TransformedFunction at 0x1052d5080>
+
+>>> Multiply( 100, 8 )
+1300
+
+
+------------- 3. Python decorators (Putting '@FunctionName' right above a function definition) -------------
+
+
+@DoMore
+def Add( x, y ) :
+  return x + 10*y
+
+# Without the above '@' code, we will have to put the following line of code in this position : 
+# 
+# Add = DoMore( Add ) 
+
+>>> @DoMore
+... def Add( x, y ) :
+...   return x + 10*y
+... 
+>>> Add( 100, 30 )
+450
+
+Q : How can I use the above methodology to transform a function (e.g., F) which takes an arbitrary list of parametert into a different function that (1) also takes this list of parameters and (2) can optionally call F()?
+
+A :
+
+  def Transform( f ):
+    
+    def TheTransformed( *args, **kwargs ):
+      
+      ... # do whatever
+      
+      # Below, the call to 'f' is completely optional
+      f( *args, **kwargs ) # or : unpack 'args' and 'kwargs' to see what's in them and then use a similar list of arguments to call F
+      
+      ... # do whatever
+    
+    return TheTransformed
+
+  F = Transform( F )
+
+https://www.programiz.com/python-programming/decorator
+
+
+------------- 4. "static methods" and "class methods" (and "normal methods") of a class (and its potential instances) -------------
+
+
+A. "decorator" (@-wrapper)
+
+The following two ways of writing Python code are semantically equivalent:
+
+(1) First way of writing :
+
+def f(...) :
+  ...
+
+f = staticmethod( f )
+
+# Thereafter, whenever you call f(...) (and you think you are calling f(...) according to f's definition), you are actually making the call staticmethod(f)(...), which is a legitimate function call, and it is this function staticmethod(f) that actually calls f() "on your behalf" (and you more or less can guess how this function, staticmethod(f), calls f.)
+
+(2) Second way of writing
+
+@staticmethod
+def f(...):
+  ...
+
+(3) It seems that 'staticmethod()' and 'classmethod()' are defined to be such that they are able to accept as their sole argument a function that takes an arbitrary list of parameters ...
+
+All these two functions ('staticmethod()' and 'classmethod()') do are just to adjust the parameters of their argument-function and then call this argument-function with the resulting list of parameters ; the purpose is to make sure that the argument-function is called in a "correct" way.
+
+B. Example for the use of '@staticmethod' and '@classmethod'
+
+class Test :
+  
+  a = 10
+  
+  # a function intended to be called via instances
+  def __init__( instSelf ) :
+    instSelf.b = 100
+  
+  # a function to be called via classmethod()
+  @classmethod
+  def CMethod( clsSelf, x ) :
+    clsSelf.a += x
+  
+  # a function to be called via staticmethod()
+  @staticmethod
+  def SMethod( x ) :
+    print( x )
+  
+  # a function NOT intended to be called via instances
+  def SMethod1() :
+    print( "Test.SMethod1() called" )
+  
+  # a function intended to be called via instances
+  def IMethod( instSelf, x ) :
+    instSelf.b += x
+
+test = Test()
+
+# test.WhateverFunction( ... )                 # df= Test.WhateverFunction( test, ... )
+# test.FunctionDecoratedAsStaticMethod( ... )  # = Test.FunctionDecoratedAsStaticMethod( ... )          # notice the use of '=' here
+# test.FunctionDecoratedAsClassMethod( ... )   # = Test.FunctionDecoratedAsClassMethod( test.__class__, ... )   # notice the use of '='
+
+# Test.WhateverFunction( ... )                 # df= Test.WhateverFunction( ... )
+# Test.FunctionDecoratedAsStaticMethod( ... )  # = Test.FunctionDecoratedAsStaticMethod( ... )        # notice the use of '=' here
+# Test.FunctionDecoratedAsClassMethod( ... )   # = Test.FunctionDecoratedAsClassMethod( Test, ... )   # notice the use of '='
+
+>>> class Test :
+...   
+...   a = 10
+...   
+...   # a function intended to be called via instances
+...   def __init__( instSelf ) :
+...     instSelf.b = 100
+...   
+...   # a function to be called via classmethod()
+...   @classmethod
+...   def CMethod( clsSelf, x ) :
+...     clsSelf.a += x
+...   
+...   # a function to be called via staticmethod()
+...   @staticmethod
+...   def SMethod( x ) :
+...     print( x )
+...   
+...   # num-of-argument error if called via an instance
+...   def SMethod1() :
+...     print( "Test.SMethod1() called" )
+...   
+...   # a function intended to be called via instances
+...   def IMethod( instSelf, x ) :
+...     instSelf.b += x
+... 
+>>> test = Test()
+
+>>> Test.a
+10
+>>> test.b
+100
+
+>>> test.a
+10
+>>> Test.b
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: type object 'Test' has no attribute 'b'
+
+>>> Test.CMethod( 5 )
+
+>>> Test.a
+15
+
+>>> Test.SMethod( 3 )
+3
+
+>>> Test.SMethod1()
+Test.SMethod1() called
+
+>>> Test.IMethod( 13 )
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: Test.IMethod() missing 1 required positional argument: 'x'
+
+>>> Test.IMethod( test, 13 )
+>>> test.b
+113
+
+>>> test.CMethod( Test, 33 )
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: Test.CMethod() takes 2 positional arguments but 3 were given  
+
+# which one was implicitly inserted? class-obj or instance-obj?
+
+>>> test.CMethod( 33 )   # can/will 'classmethod()' take care of the "implicit inserted first argument"?
+>>> # what exactly is happening here? any guess?
+
+>>> test.SMethod1()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: Test.SMethod1() takes 0 positional arguments but 1 was given
+
+# why is there such an error?
+
+# let us call the above error an "extra argument" error
+
+>>> test.SMethod()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: Test.SMethod() missing 1 required positional argument: 'x'
+
+# what happens to the implicit inserted first argument? was there such an argument at all? any guess?
+
+>>> test.SMethod( 25 )
+25             # why is there no "extra argument" error?
+
+>>> test.IMethod( 67 )
+>>> test.b
+180
+
+>>> test.a
+48
+
+>>> test.__class__
+<class '__main__.Test'>
+
+>>> type( test )
+<class '__main__.Test'>
+
+>>> test.__class__.a
+48
+
+>>> test.__class__.a += 10
+
+>>> Test.a
+58
+
+>>> type( test ).a
+58
+
+>>> type( test ).a += 20
+
+>>> type( test ).a
+78
+
+>>> Test.a
+78
+
+# it is easy to get the class-object that an instance "belongs to."  This means what???
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+～～～～～～～～～～～～～～～～～～ break ～～～～～～～～～～～～～～～～～～
+
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+         Correct and incorrect ways of writing the methods of a class
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+# Python-WeekSecond-05-SomeDay.txt (Lines 2948-3264)
+
+a = b = 123
+
+# INCORRECT way of writing class methods
+
+class Class1 :
+  
+  a = b = 888
+  
+  def __init__( self ) :
+    
+    Class1.a += 1
+    Class1.b += 1
+    
+    self.a = self.b = 2000     
+  
+  def PrintClassVar() :
+    print( "Value of a of this class :", Class1.a )
+    print( "Value of b of this class :", Class1.b )
+  
+  def PrintAllVar( self ) :
+    print( "Value of a :", a )
+    print( "Value of b :", b )
+    
+    print( "Value of my own a :", self.a )
+    print( "Value of my own b :", self.b )
+    
+    print( "Value of a of my class :", Class1.a )
+    print( "Value of b of my class :", Class1.b )
+  
+  def UpdateClassVar() :
+    Class1.a += 10
+    Class1.b += 10
+  
+  def UpdateAllVar( self ) :
+    global a, b
+    a += 5
+    b += 5
+    Class1.a += 100
+    Class1.b += 100
+    self.a += 10
+    self.b += 10
+
+# END-Class1
+
+# CORRECT way of writing class methods
+
+class Class2 :
+  
+  a = b = 888
+  
+  def __init__( self ) :
+    
+    self.__class__.a += 1
+    type( self ).b += 1
+    
+    self.a = self.b = 2000     
+  
+  @staticmethod
+  def StaticPrintVar() :
+    # just an ordinary method that is classified as belonging to this class
+    print( "Value of a :", a )
+    print( "Value of b :", b )
+  
+  @classmethod
+  def ClassPrintClassVar( self ) :
+    print( "Value of a of this class :", self.a )
+    print( "Value of b of this class :", self.b )
+  
+  def PrintAllVar( self ) :
+    print( "Value of a :", a )
+    print( "Value of b :", b )
+    
+    print( "Value of my own a :", self.a )
+    print( "Value of my own b :", self.b )
+    
+    print( "Value of a of my class :", self.__class__.a )
+    print( "Value of b of my class :", type( self ).b )
+  
+  @classmethod
+  def UpdateClassVar( self ) :
+    self.a += 10
+    self.b += 10
+  
+  def UpdateAllVar( self ) :
+    global a, b
+    a += 5
+    b += 5
+    self.__class__.a += 100
+    type(self).b += 100
+    self.a += 10
+    self.b += 10
+
+# END-Class2
+
+>>> a = b = 123
+
+>>> class Class1 :
+...   
+...   a = b = 888
+...   
+...   def __init__( self ) :
+...     
+...     Class1.a += 1
+...     Class1.b += 1
+...     
+...     self.a = self.b = 2000     
+...   
+...   def PrintClassVar() :
+...     print( "Value of a of this class :", Class1.a )
+...     print( "Value of b of this class :", Class1.b )
+...   
+...   def PrintAllVar( self ) :
+...     print( "Value of a :", a )
+...     print( "Value of b :", b )
+...     
+...     print( "Value of my own a :", self.a )
+...     print( "Value of my own b :", self.b )
+...     
+...     print( "Value of a of my class :", Class1.a )
+...     print( "Value of b of my class :", Class1.b )
+...   
+...   def UpdateClassVar() :
+...     Class1.a += 10
+...     Class1.b += 10
+...   
+...   def UpdateAllVar( self ) :
+...     global a, b
+...     a += 5
+...     b += 5
+...     Class1.a += 100
+...     Class1.b += 100
+...     self.a += 10
+...     self.b += 10
+... 
+>>> # END-Class1
+
+>>> class Class2 :
+...   
+...   a = b = 888
+...   
+...   def __init__( self ) :
+...     
+...     self.__class__.a += 1
+...     type( self ).b += 1
+...     
+...     self.a = self.b = 2000     
+...   
+...   @staticmethod
+...   def StaticPrintVar() :
+...     # just an ordinary method that is classified as belonging to this class
+...     print( "Value of a :", a )
+...     print( "Value of b :", b )
+...   
+...   @classmethod
+...   def ClassPrintClassVar( self ) :
+...     print( "Value of a of this class :", self.a )
+...     print( "Value of b of this class :", self.b )
+...   
+...   def PrintAllVar( self ) :
+...     print( "Value of a :", a )
+...     print( "Value of b :", b )
+...     
+...     print( "Value of my own a :", self.a )
+...     print( "Value of my own b :", self.b )
+...     
+...     print( "Value of a of my class :", self.__class__.a )
+...     print( "Value of b of my class :", type( self ).b )
+...   
+...   @classmethod
+...   def UpdateClassVar( self ) :
+...     self.a += 10
+...     self.b += 10
+...   
+...   def UpdateAllVar( self ) :
+...     global a, b
+...     a += 5
+...     b += 5
+...     self.__class__.a += 100
+...     type(self).b += 100
+...     self.a += 10
+...     self.b += 10
+... 
+>>> # END-Class2
+
+>>> a
+123
+>>> b
+123
+
+>>> c1 = Class1()
+>>> c2 = Class2()
+
+>>> Class1.PrintClassVar()
+Value of a of this class : 889
+Value of b of this class : 889
+
+>>> Class2.ClassPrintClassVar()
+Value of a of this class : 889
+Value of b of this class : 889
+
+>>> c1.PrintAllVar()
+Value of a : 123
+Value of b : 123
+Value of my own a : 2000
+Value of my own b : 2000
+Value of a of my class : 889
+Value of b of my class : 889
+
+>>> c2.PrintAllVar()
+Value of a : 123
+Value of b : 123
+Value of my own a : 2000
+Value of my own b : 2000
+Value of a of my class : 889
+Value of b of my class : 889
+
+>>> Class1.UpdateClassVar()
+>>> Class2.UpdateClassVar()
+
+>>> c1.PrintAllVar()
+Value of a : 123
+Value of b : 123
+Value of my own a : 2000
+Value of my own b : 2000
+Value of a of my class : 899
+Value of b of my class : 899
+
+>>> c2.PrintAllVar()
+Value of a : 123
+Value of b : 123
+Value of my own a : 2000
+Value of my own b : 2000
+Value of a of my class : 899
+Value of b of my class : 899
+
+>>> del Class1
+>>> del Class2
+
+>>> c1.PrintAllVar()
+Value of a : 123
+Value of b : 123
+Value of my own a : 2000
+Value of my own b : 2000
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "<stdin>", line 23, in PrintAllVar
+NameError: name 'Class1' is not defined
+
+# Q : Why this error msg?
+
+>>> c2.PrintAllVar()
+Value of a : 123
+Value of b : 123
+Value of my own a : 2000
+Value of my own b : 2000
+Value of a of my class : 899
+Value of b of my class : 899
+
+# Q : What is the difference between the two calls that has resulted in "no error" for this call?
+
+>>> type( c1 ).UpdateClassVar()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "<stdin>", line 27, in UpdateClassVar
+NameError: name 'Class1' is not defined
+
+# Q : Why this error msg?
+
+>>> type( c2 ).UpdateClassVar()
+
+# Q : What is the difference between the two calls that has resulted in "no error" for this call?
+
+# Q : Why is it the case that the "counterpart" of '__class__()' is named 'type()' and not 'class()'?  ### e.g., in other cases, we have 'iter()' vs. '__iter__()' and 'next()' vs. '__next__()' 
+
+>>> c2.PrintAllVar()
+Value of a : 123
+Value of b : 123
+Value of my own a : 2000
+Value of my own b : 2000
+Value of a of my class : 909
+Value of b of my class : 909
+
+
+-----------------------------------------------------------------------------------------------------
+
+# hsia : Below may serve to "prove" how difficult it is to "penetrate" relevant wordings that appear in the official Python documentation.
+
+reference.pdf, 3.2. The standard type hierarchy 25
+(The Python Language Reference, Release 3.7.4)
+
+Static method objects
+
+Static method objects provide a way of defeating the transformation of function objects to method objects. A static method object is a wrapper around any other object, usually a userdefined method object.
+
+When a static method object is retrieved from a class or a class instance, the object actually returned is the wrapped object, which is not subject to any further transformation.
+
+Static method objects are not themselves callable, although the objects they wrap usually are.
+
+Static method objects are created by the built-in staticmethod() constructor.
+
+-
+
+Class method objects
+
+A class method object, like a static method object, is a wrapper around another object that alters the way in which that object is retrieved from classes and class instances.
+
+The behaviour of class method objects upon such retrieval is described above, under “User-defined methods”.
+
+Class method objects are created by the built-in classmethod() constructor.
+
+天書 ： reference.pdf pp. 20-22 on Callable types
+
+The only readable words are :
+
+When an instance method object is called, the underlying function (__func__) is called, inserting the class instance (__self__) in front of the argument list. For instance, when C is a class which contains a definition for a function f(), and x is an instance of C, calling x.f(1) is equivalent to calling C.f(x, 1).
+
+When an instance method object is derived from a class method object, the “class instance” stored in __self__ will actually be the class itself, so that calling either x.f(1) or C.f(1) is equivalent to calling f(C,1) where f is the underlying function.
+
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+                             The 'with' construct
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+# Python-WeekSecond-05-SomeDay.txt (Lines 3268-3325)
+
+                                          The 'with' construct         # Python-WeekSecond-05-SomeDay.txt
+
+C# 有提供'using'這個construct，執行'using obj'會導致'obj'的'Dispose()'自動被呼叫。'obj'所屬的class必須有implement 'IDisposable'這個interface、其中包括'Dispose()'這個method。
+
+其目的：省掉try-catch的使用，使得程式碼看起來比較簡潔。
+
+using ( Resource resource = GetResource() )
+{
+    // do something with 'resource'.
+    ...
+} // using
+
+      which is equivalent to:
+
+Resource resource = GetResource()
+
+try {
+    // do something with 'resource'
+    ...
+} // try
+... // 'catch'
+finally {
+
+  // 'resource' might not have been acquired, or it may have been freed already
+
+  if ( resource != null )  // hsia-company policy : After a resource is freed, you must set it to 'null'
+    ( ( IDisposable ) resource ).Dispose() ;
+
+} // finally
+
+==========================================
+
+同樣的，Python提供'with' construct。執行'with obj'會導致'obj'的'__enter__()'與'__exit__()'自動被呼叫。'obj'所屬的class必須有implement '__enter__()'與'__exit__()'這兩個special method，理論上、此二function與資源(resource)的佔用與歸還有關。
+
+>>> with open('workfile') as f:    # Supposedly, there is an f.__enter__() and an f.__exit__() that can be (implicitly) called (by 'with').
+...   read_data = f.read()
+>>>
+
+>>> f.closed
+True
+
+#######
+
+with open("myfile.txt") as f :
+  for line in f :
+    print( line, end = "" )
+
+#######
+
+>>> from urllib.request import urlopen
+
+>>> with urlopen('http://tycho.usno.navy.mil/cgi-bin/timer.pl') as response :  # supposedly, there are response.__enter__() and response.__exit__() that can be called (implicitly, by 'with', upon entering/leaving the with-block)
+...   for line in response:
+...     line = line.decode('utf-8') # Decoding the binary data to text.
+...     if 'EST' in line or 'EDT' in line: # look for Eastern Time
+...       print(line)
+<BR>Nov. 25, 09:43:32 PM EST
+>>>
+
+
+
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+                         Regarding 'NotImplemented'
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+# Python-WeekSecond-05-SomeDay.txt (Lines 3329-3369)
+
+                                              Regarding 'NotImplemented'         # Python-WeekSecond-05-SomeDay.txt
+
+>>> dir( object )
+['__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__']
+
+>>> class C0531 :
+...   def __init__( self ) :
+...     pass
+... 
+>>> dir( C0531 )
+['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__']
+
+>>> help( C0531.__ne__ )
+
+  __ne__(self, value, /)
+      Return self!=value.
+
+>>> a
+<generator object <genexpr> at 0x100c89150>
+
+>>> C0531.__ne__( a )
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: expected 1 argument, got 0
+
+>>> c0531a = C0531()
+
+>>> c0531a.__ne__( a )
+NotImplemented
+
+>>> abcd
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'abcd' is not defined
+
+>>> c0531a.__ne__( abcd )
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'abcd' is not defined
+
+# Explain!!!
+
+###################################################################################################################
+
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+                      Lambda expressions and 'map'
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+# Python-WeekSecond-05-SomeDay.txt (Lines 3373-3434)
+
+                                    Lambda expressions and 'map'         # Python-WeekSecond-05-SomeDay.txt
+
+# a lambda expression is a "nameless" function (intended to be throw away after use)
+
+>>> lambda x : x + 4
+<function <lambda> at 0x10149e160>
+
+>>> lambda x : x + 4 (5)    # Did this on purpose ; just wanted to see how the system would react to this type of writing
+<stdin>:1: SyntaxWarning: 'int' object is not callable; perhaps you missed a comma?
+<function <lambda> at 0x10149dda0>
+
+# Why this error message?
+
+>>> (lambda x : x + 4) (5)
+9
+
+>>> map( lambda x : x + 4, ( 3,4,5 ) )
+<map object at 0x101477f10>
+
+>>> tuple( map( lambda x : x + 4, (3,4,5) ) )
+(7, 8, 9)
+
+>>> F = lambda x : x + 4
+
+>>> F(10)
+14
+
+>>> map( F, (3,4,5) )
+<map object at 0x101477c40>
+
+>>> tuple( map( F, (3,4,5) ) )
+(7, 8, 9)
+
+>>> [ x + 4 for x in (3,4,5) ]
+[7, 8, 9]
+
+>>> tuple( [ x + 4 for x in (3,4,5) ] )
+(7, 8, 9)
+
+>>> a0531 = ( x + 4 for x in (3,4,5) )
+>>> b0531 = ( x + 4 for x in (3,4,5) )
+
+>>> next( a0531 )
+7
+>>> next( b0531 )
+7
+
+# more than one way of doing the same thing ... (well, the designer of Python has a perfectly legitimate reason for doing this ...)
+
+>>> x = map( F, (3,4,5) )
+
+>>> dir( x )
+['__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__iter__', '__le__', '__lt__', '__ne__', '__new__', '__next__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__']
+
+>>> for y in map( F, (3,4,5) ) :
+...   print( y )
+... 
+7
+8
+9
+
+# Why is it that we are able to execute the above code (without encountering any error)? (Give the reasons.)
+
+
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+                                 Metaclass???
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+
+https://dboyliao.medium.com/%E6%B7%BA%E8%AB%87-python-metaclass-dfacf24d6dd5
+Google : Python metaclass
+
+
+
+
+
+
+
+

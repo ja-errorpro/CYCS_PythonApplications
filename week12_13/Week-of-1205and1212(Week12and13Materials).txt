@@ -1,0 +1,1813 @@
+Week-of-1205and1212(Week12and13Materials).txt
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+Python for-loops, iterators, iterables, generators, generator expressions, enumerate and comprehensions
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+                   The grand Pythonic concept of iterators (iterables, iterators, generators, generator expressions)
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+The concept of iterators and the use of iterators in for-loops in Python
+
+including :
+
+  The dismantling of a Python for-loop
+
+  The Pythonic concept of 'enumerate'
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+                The concept of iterators and the use of iterators in for-loops in Python
+
+★★★★★ the concept of iterables, iterators, iterations, generators, and generator expressions is crucial. So, pay attention, and practice it when you should！ ★★★★★
+
+# Below, we show the evolution of THE CONCEPT (of iterators). Don't pay attention to the code！ But get familiar with the concept！
+
+Counter-controlled loops in Pascal (the origin of for loops) # The real origin of counter-controlled loops is Fortran
+
+  for i := 10 to 50 do
+  begin
+    ...
+  end
+
+  for i := 50 downto 10 step 5 do
+  begin
+    ...
+  end
+
+  # What does the above concept remind you of in Python?
+
+:= : Pascal assignment
+i  : loop-control variable ; it only exists in the loop and cannot be changed by user code.
+
+FORTRAN 
+
+  ! FORTRAN does not use the keyword 'for' for counter-controlled loops
+
+     DO 10 counter = initValue, finalValue, step
+       ...
+  10 CONTINUE
+
+  DO counter = init, final, step
+    ...
+  END DO
+
+  # Again, what does the above concept remind you of in Python?
+
+# The above was the origin of the following way of writing for-loop code in C/C++/Java.
+
+C/C++/Java
+
+  for ( int i = initValue ; i < finalValue ; i = i + step ) {
+    ...  // the scope of 'i' is the loop body ; 'i' can be changed by user code 
+  } // for
+
+  // C/C++ (actually a novell way of writing for-loop code)
+  for ( NodePtr walk = head ; walk != NULL ; walk = walk->next )
+    .... // do something to/with walk->data
+
+  // Java
+  for ( int i = 0 ; i < a.length ; i++ ) // or : for ( int i = start ; i < a.length ; i += step )
+    ... // do something to/with a[i]
+
+  // Java again (if you constructed such a linked list ...)
+  for ( Node it = listHead ; it != null ; it = it.next )
+    .... // do something to/with it.data
+
+  # What is the main idea of the above for-loops of C/C++/Java?
+
+Iterator (Java version)
+
+    // Just to build a collection // an ArrayList is "almost a vector", while a vector is an unbounded array (conceptually speaking)
+    ArrayList<String> cars = new ArrayList<String>();
+    cars.add("Volvo");
+    cars.add("BMW");
+    cars.add("Ford");
+    cars.add("Mazda");
+
+    // Get the corresponding iterator
+    Iterator<String> it = cars.iterator();
+
+    while ( it.hasNext() )
+      ... // do something with/to it.next() 
+
+Iterator (C++)
+
+  // paragraph excerpted from the Web, with slight modifications
+
+  An iterator is any object that, pointing to some element in a range of elements (such as an array or a container), has the ability to iterate through the elements of that range using a set of operators (with at least the increment (++) and dereference (*) operators).
+
+  The most obvious form of iterator is a pointer: A pointer can point to elements in an array, and can iterate through them using the increment operator (++). But other kinds of iterators are possible. For example, each container type (such as a list) has a specific iterator type designed to iterate through its elements.
+
+  Note that while a pointer is a form of iterator, not all iterators have the same functionality of pointers.
+
+##### IteratorCPlusPlus.cpp ##### Illustrating the idea and use of an iterator
+
+# include <iostream>     // std::cout
+# include <vector>       // std::vector, std::begin, std::end
+# include <iterator>     // std::begin(), std::end()
+
+int main () {
+
+  int a[] = { 10,20,30,40,50 } ;
+  std::vector<int> vec_a ;
+
+  // iterate through a[] and insert into vec_a
+  // on the side : sometimes, we can also use 'auto' to ask the system to infer about the type of 'it'
+  for ( int * it = std::begin( a ); it != std::end( a ); ++it )
+    vec_a.push_back( *it );
+
+  std::cout << "'vec_a' contains :";
+
+  // iterate through vec_a and print its elements
+  // on the side : sometimes, we can also use 'auto' to ask the system to infer about the type of 'it'
+  for ( std::vector<int>::iterator  it = std::begin( vec_a ); it != std::end( vec_a ); ++it )
+    std::cout << ' ' << *it;
+
+  std::cout << '\n';
+
+  return 0;
+
+} // main()
+
+##### Test run #####
+
+> ./a.out
+'vec_a' contains : 10 20 30 40 50
+
+##### END - Test run #####
+
+##### IteratorCPlusPlusAgain.cpp ##### Illustrating the use of 'prev'
+
+# include <iostream>     // std::cout
+# include <vector>       // std::vector, std::begin, std::end
+# include <iterator>     // std::begin(), std::end()
+
+int main () {
+
+  int a[] = { 10,20,30,40,50 } ;
+  std::vector<int> vec_a ;
+
+  // iterate through a[] and insert into vec_a
+  // on the side : sometimes, we can also use 'auto' to ask the system to infer about the type of 'it'
+  for ( int * it = std::begin( a ); it != std::end( a ); ++it )
+    vec_a.push_back( *it );
+
+  std::cout << "'vec_a' contains :\n";
+
+  // iterate through vec_a and print its elements
+  // on the side : sometimes, we can also use 'auto' to ask the system to infer about the type of 'it'
+  for ( std::vector<int>::iterator  it = std::begin( vec_a ) ; it != std::end( vec_a ) ; ++it ) {
+    if( it != std::begin( vec_a ) )
+      std::cout << * std::prev( it ) << ' ' ;
+    std::cout << *it << '\n';
+    std::cout << "-----\n" ;
+  } // for
+
+  std::cout << '\n';
+
+  return 0;
+
+} // main()
+
+##### Test run #####
+
+> ./a.out
+'vec_a' contains :
+10
+-----
+10 20
+-----
+20 30
+-----
+30 40
+-----
+40 50
+-----
+
+##### END - Test run #####  
+
+##### IteratorForCompleteAccess.cpp ##### "complete access" df= reference + udpate
+
+# include <iostream>     // std::cout
+# include <vector>       // std::vector, std::begin, std::end
+# include <iterator>     // std::begin(), std::end()
+
+int main () {
+
+  int a[] = { 10,20,30,40,50 } ;
+  std::vector<int> vec_a ;
+
+  std::cout << "\n" ;
+
+  // iterate through a[] and insert into vec_a
+  // on the side : sometimes, we can also use 'auto' to ask the system to infer about the type of 'it'
+  for ( int * it = std::begin( a ); it != std::end( a ); ++it )
+    vec_a.push_back( *it );
+
+  std::cout << "'vec_a' contains :" ;
+
+  // iterate through vec_a and print its elements
+  // on the side : sometimes, we can also use 'auto' to ask the system to infer about the type of 'it'
+  for ( std::vector<int>::iterator  it = std::begin( vec_a ); it != std::end( vec_a ); ++it )
+    std::cout << ' ' << *it;
+
+  std::cout << "\n\n";
+
+  // ----- new : let's try to update the element of 'vec_a' by using an iterator ---
+
+  for ( std::vector<int>::iterator  it = std::begin( vec_a ); it != std::end( vec_a ); ++it )
+    *it = *it + 100 ;
+
+  std::cout << "After making the updates, 'vec_a' now contains :" ;
+
+  for ( std::vector<int>::iterator  it = std::begin( vec_a ); it != std::end( vec_a ); ++it )
+    std::cout << ' ' << *it;
+
+  std::cout << "\n\n" ;
+
+  return 0;
+
+} // main()
+
+##### END - IteratorForCompleteAccess.cpp #####
+
+##### Test run #####
+
+> ./a.out
+
+'vec_a' contains : 10 20 30 40 50
+
+After making the updates, 'vec_a' now contains : 110 120 130 140 150
+
+##### END - Test run #####
+
+==========================================
+
+So, just what is an iterator? (i.e., please describe the concept of iterators！)
+
+==========================================
+
+                   The grand Pythonic concept of iterators (iterables, iterators, generators, generator expressions)
+
+Python has no 'iterator' class. However, there are numerous xyz_iterator classes. Every instance of these xyz_ieterator classes is an iterator.
+
+★★★★★ Just what is an iterator in Python? ★★★★★
+
+An iterator is any object with a 'next' (Python 2) or '__next__' (Python 3) method that can be called (by 'next()' in Python 3). When this iterator object is passed as THE argument to 'next()',  a "next element" of THE ASSOCIATED iterable is returned. When there is no "next element" to return, next() (or rather, the __next__() instance method of the iterator) will raise a StopIteration exception. Iterator objects are often used in conjunction with the use of for-loops so as to iterate over all elements of their associated iterables.
+
+★★★★★ Any class that offers a '__next__()' instance method is considered an "iterator class". ★★★★★
+
+Let 'it' be an instance of such a class/type (an xyz_iterator class). When it.__next__() is called, ... a "next element" of the iterable associated with 'it' is returned.
+
+★★★★★ Just what is an iterable??? ★★★★★
+
+★★★★★ An iterable is any object that, when being passed as THE argument to 'iter()', will get us an iterator. ★★★★★
+
+★★★★★ An iterable is any object obj with dir(obj) containing the function '__iter__()' ★★★★★
+
+★★★★★ So, THE rationale is : we get iterators (instances of xyz_iterators) from iterables (and then use 'next( theIterator )' to call the __next__() method of theIterator so as to get the next element of the underlying iterable). ★★★★★
+
+iter(...)
+  iter(iterable) -> iterator
+  iter(callable, sentinel) -> iterator
+    
+  Get an iterator from an object.  In the first form, the argument must supply its own iterator, or be a sequence.
+  In the second form, the callable is called until it returns the sentinel.
+
+# Take the Python tuple '(3,4,5)' as an example. This tuple can be passed as THE argument to 'iter()', thereby causing an iterator (a tuple_iterator in fact) to be returned. The resulting tuple_iterator, when passed as THE argument to 'next()', will get us the "next element" of '(3,4,5)', the tuple object that has become THE iterable associated with this tuple_iterator. 
+
+>>> dir( (3,4,5) )    # what does the tuple object named by '(3,4,5)' has to offer?
+['__add__', '__class__', '__contains__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getnewargs__', '__gt__', '__hash__', '__init__', '__iter__', '__le__', '__len__', '__lt__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'count', 'index']
+
+>>> a = (3,4,5).__iter__()    # suppose we invoke the '__iter__()' method of the tuple object named by '(3,4,5)'.
+
+# a tuple_iterator object is returned, and we name this tuple_iterator object 'a' ;
+
+# this tuple_iterator object, when being passed to 'next()', will get us "the next element" of the underlying iterable (which is the tuple object named by '(3,4,5)')
+
+>>> next(a)
+3              # '3' is a name of that "next element" object
+>>> next(a)
+4
+>>> next(a)
+5
+>>> next(a)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+>>> b = iter( (3,4,5) )
+>>> next(b)
+3
+>>> next(b)
+4
+>>> next(b)
+5
+>>> next(b)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+# Again, what does 'iter()' do?????
+
+>>> type( b )
+<class 'tuple_iterator'>
+
+# apparently, 'tuple_iterator' is one of the various 'xyz_iterator' classes
+
+>>> dir(b)
+['__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__iter__', '__le__', '__length_hint__', '__lt__', '__ne__', '__new__', '__next__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__setstate__', '__sizeof__', '__str__', '__subclasshook__']
+
+# what does the above (i.e., the output of dir(b)) tell us???
+
+# So what does 'next()' do?????
+
+(A paragraph taken from the Web, slightly rephrased...) In more precise terms, an iterable is an object that has an __iter__ method which returns an iterator, or which defines a __getitem__ method that can take sequential indexes starting from zero (and raises an IndexError when the indexes are no longer valid). 
+
+★★★★★ An iterable (call it 'iterable1') is an object that you can get an iterator from (by using 'iter()' to call 'iterable1.__iter__()'). The resulting iterator (call it 'it') can then be used to iterate over the iterable (by repeatedly using 'next()' to call 'it.__next__()'). ★★★★★
+
+(Continued from the above paragraph ...) Whenever you use a for loop, or map, or a list comprehension, etc. in Python, the 'next' method is called automatically to get each item of the underlying iterable, thus going through the process of iteration.
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+～～～～～～～～～～～～～～～～～～ break ～～～～～～～～～～～～～～～～～～
+
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+★★★★★ Key Python concept : the very purpose of a for-loop is to iterate over some iterable ★★★★★
+
+# Note : the above just-stated "key concept of Python" will be slightly modified to accommodate the idea of generators.
+
+# Students taking this course. Your mission : to be well acquainted with every aspect of iterators (and this includes iterables, iterators, iterations, generators, generator expressions, and list/set/dictionary comprehensions).
+
+Python for-loops :
+
+  for i in SOMETHING :
+    ... # code that can optionally access 'i', including changing its "binding" ( but this will not affect "the next i" (why?) )
+
+(1) 'i' may be said to be a "loop control var" ; however, 'i' can be changed in loop body (ant it will be reset by 'for i in SOMETHING')
+
+(2) The SOMETHING must be an iterable, i.e., 'iter( SOMETHING )' must be able to return an iterator which, in turn, can be used as the argument to 'next()' (Note : this requirement will be relaxed a little bit to accommodate the idea of generators)
+
+(3) it seems that 'for' will repeatedly (and implicitly) call 'next( it )', where 'it' is the iterator returned by 'iter( SOMETHING )', until a StopIteration exception is raised.
+
+(4) The Python for-loop construct is designed to stop looping whenever a StopIteration exception is raised by next( it ).
+
+Therefore, by the above analysis,
+
+    for i in SOMETHING :
+      ... # code that can optionally access 'i', including changing its value
+
+is equivalent to the following code fragment
+
+    it = iter( SOMETHING )    
+    try :
+      while True :
+        i = next( it )
+        ... # code that can optionally access 'i', including changing its value
+    except StopIteration :
+      pass
+
+ref. https://stackoverflow.com/questions/9884132/what-are-iterator-iterable-and-iteration
+
+Try the following code and see how it works :
+
+it = iter( (3,4,5) )
+try :
+  while True :
+    i = next( it )
+    print( i * 10 )
+except StopIteration :
+  pass
+
+hsia : you now understand how 'for' works for '[3, 45, 82]'. Do you see how 'for' works for 'range(10)'?
+
+Similarly,
+
+for i in range( 10 ) :
+  print( "Value of i :", i )
+
+should be equivalent to the following code fragment
+
+it = iter( range(10) )
+try :
+  while True :
+    i = next( it )
+    print( "Value of i :", i )
+except StopIteration :
+  pass
+
+# 以下是對 'for i in range(10) : ...' 的 "細部解剖" ...
+
+>>> a = range(10)
+>>> a
+range(0, 10)
+>>> type(a)
+<class 'range'>
+
+>>> help( range )
+Help on class range in module builtins:
+
+class range(object)
+ |  range(stop) -> range object
+ |  range(start, stop[, step]) -> range object
+ |  
+ |  Return an object that produces a sequence of integers from start (inclusive)
+ |  to stop (exclusive) by step.  range(i, j) produces i, i+1, i+2, ..., j-1.
+ |  start defaults to 0, and stop is omitted!  range(4) produces 0, 1, 2, 3.
+ |  These are exactly the valid indices for a list of 4 elements.
+ |  When step is given, it specifies the increment (or decrement).
+ ...
+ |  __getitem__(self, key, /)
+ |      Return self[key].
+ |  
+ ...
+ |  __iter__(self, /)                     # what does '/' mean here???????????
+ |      Implement iter(self).
+ |  
+ ...
+ |  ----------------------------------------------------------------------
+ |  Data descriptors defined here:
+ |  
+ |  start
+ |  
+ |  step
+ |  
+ |  stop
+
+# therefore, a 'range' object is an iterable.   # Q : How can we tell???
+
+>>> a = range(10)     # this creates an instance of 'range' (the 'range' class)
+>>> a
+range(0, 10)
+
+>>> b = iter( a )     # Q : this call (to 'iter()') does what???
+>>> b
+<range_iterator object at 0x10711e1c0>
+
+# apparently, 'range_iterator' is one of the various xyz_iterator classes
+
+>>> help( b )
+Help on range_iterator object:
+
+class range_iterator(object)
+ |  Methods defined here:
+ |  
+ |  __getattribute__(self, name, /)
+ |      Return getattr(self, name).
+ |  
+ |  __iter__(self, /)
+ |      Implement iter(self).
+ |  
+ |  
+ |  __length_hint__(...)
+ |      Private method returning an estimate of len(list(it)).
+ |  
+ |  __next__(self, /)               # this is what makes a range_iterator (or any xyz_iterator for that matter) an iterator
+ |      Implement next(self).
+ |  
+ |  __reduce__(...)
+ |      Return state information for pickling.
+ |  
+ |  __setstate__(...)
+ |      Set state information for unpickling.
+
+>>> next(b)   # what does this call to 'next()' do?????
+0
+>>> next(b)
+1
+
+# now explain the following
+
+it = iter( range(10) )
+try :
+  while True :
+    i = next( it )
+    print( "Value of i :", i )
+except StopIteration :
+  pass
+
+# what does 'range(10)' do?
+# what does 'iter( range(10) )' do?
+# what does 'next( it )' do?
+# how does this try-while-except StopIteration work?
+
+# Compare these two code fragments ...
+
+for i in range( 10 ) :
+  print( "Value of i :", i )
+
+# END - 『對 'for i in range(10) : ...' 的 細部解剖』
+
+------------------------------
+
+# From the Web
+
+Q : how do i check whether an object is an iterable in Python?
+
+A : The only reliable way to determine whether an object (named 'obj') is an iterable 
+    is 
+    to direcly ask the object to produce an associated iterator by executing the call 'iter(obj)' (and handle a TypeError exception if it isn't).
+
+------------------------------
+
+# Let us try to define an iterable class by ourselves (Q: what instance methods should there be? how can you tell whether a method is an instance method? The correct answer to this last question is ... )
+
+class IterableExample:
+  
+  def __init__(self, max=0):
+    self.max = max
+  
+  def __iter__(self):
+    self.n = 0
+    return self
+  
+  def __next__(self):
+    if self.n <= self.max:
+      if self.n % 2 ==0:
+        result=self.n
+        self.n += 1
+        return result
+      else:
+        self.n += 1
+        return 1
+    else:
+      raise StopIteration
+    
+# END - class IterableExample
+
+# let us now create an iterable object - an object that has an '__iter__(self)' instance method which, when called, will return an iterator object (an object that has a '__next__(self)' instance method that satisfies the 'for'-loop-requirement).
+
+numbers = IterableExample(10)  
+
+for i in numbers : # since 'numbers' is an iterable object
+	print(i)
+
+### END - Example of How to create and use an iterable(+iterator) class ###
+
+###################################################################################################################
+
+                                 The Pathonic concept of 'enumerate'
+
+# Objective : we also want to get the index of the element (of the underlying iterable) that is returned of a call to 'next()'
+
+FROM
+
+it = iter( anIterable )
+try :
+  while True :
+    i = next( it )
+    print( "Value of i :", i )
+except StopIteration :
+  pass
+
+TO
+
+it = iter( anIterable )
+hiddenIndex = 0
+i = hiddenIndex
+try :
+  while True :
+    item = next( it )
+    print( "Value of i and item :", i, item )
+    hiddenIndex += 1
+    i = hiddenIndex
+except StopIteration :
+  pass
+
+THEN TO
+
+for i, item in enumerate( anIterable ) :
+  print( "Value of i and item :", i, item )
+
+e.g.,
+
+it = iter( (20,30,40) )
+i = hiddenIndex = 0
+try :
+  while True :
+    item = next( it )
+    print( "Value of i and item :", i, item )
+    i = hiddenIndex = hiddenIndex + 1
+except StopIteration :
+  pass
+
+>>> it = iter( (20,30,40) )
+>>> i = hiddenIndex = 0
+>>> try :
+...   while True :
+...     item = next( it )
+...     print( "Value of i and item :", i, item )
+...     i = hiddenIndex = hiddenIndex + 1
+... except StopIteration :
+...   pass
+... 
+Value of i and item : 0 20
+Value of i and item : 1 30
+Value of i and item : 2 40
+
+
+for i, item in enumerate( (20,30,40) ) :
+  print( "Value of i and item :", i, item )
+
+>>> for i, item in enumerate( (20,30,40) ) :
+...   print( "Value of i and item :", i, item )
+... 
+Value of i and item : 0 20
+Value of i and item : 1 30
+Value of i and item : 2 40
+
+
+---------------------------
+
+# New objective : to start off from a different starting-index (instead of the default starting-index 0)
+
+FROM
+
+it = iter( anIterable )
+i = hiddenIndex = firstOfI
+try :
+  while True :
+    item = next( it )
+    print( "Value of i and item :", i, item )
+    i = hiddenIndex = hiddenIndex + 1
+except StopIteration :
+  pass
+
+TO
+
+for i, item in enumerate( anIterable, start = firstOfI ) :
+  print( "Value of i and item :", i, item )
+
+e.g.,
+
+it = iter( range(10,30,5) )   # start, stop, step
+i = hiddenIndex = 301  # firstOfI
+try :
+  while True :
+    item = next( it )
+    print( "Value of i and item :", i, item )
+    i = hiddenIndex = hiddenIndex + 1
+except StopIteration :
+  pass
+
+>>> it = iter( range(10,30,5) )   # start, stop, step
+>>> i = hiddenIndex = 301  # firstOfI
+>>> try :
+...   while True :
+...     item = next( it )
+...     print( "Value of i and item :", i, item )
+...     i = hiddenIndex = hiddenIndex + 1
+... except StopIteration :
+...   pass
+... 
+Value of i and item : 301 10
+Value of i and item : 302 15
+Value of i and item : 303 20
+Value of i and item : 304 25
+
+
+for i, item in enumerate( range(10,30,5), start = 301 ) :  # range( start, stop, step ), firstOfI
+  print( "Value of i and item :", i, item )
+
+>>> for i, item in enumerate( range(10,30,5), start = 301 ) :  # range( start, stop, step ), firstOfI
+...   print( "Value of i and item :", i, item )
+... 
+Value of i and item : 301 10
+Value of i and item : 302 15
+Value of i and item : 303 20
+Value of i and item : 304 25
+
+------------
+
+# Can't stop wondering : will it matter if I change the index that shows up in the code body ...
+
+for i, item in enumerate( range(10,30,5), start = 301 ) :  # range( start, stop, step ), firstOfI
+  print( "Value of i and item :", i, item )
+  i += 1
+
+>>> for i, item in enumerate( range(10,30,5), start = 301 ) :  # range( start, stop, step ), firstOfI
+...   print( "Value of i and item :", i, item )
+...   i += 1
+... 
+Value of i and item : 301 10
+Value of i and item : 302 15
+Value of i and item : 303 20
+Value of i and item : 304 25
+
+# of course, the translated code must be robust so as to be able to handle this sort of situation ...
+
+it = iter( range(10,30,5) )   # start, stop, step
+i = hiddenIndex = 301  # firstOfI
+try :
+  while True :
+    item = next( it )
+    print( "Value of i and item :", i, item )
+    i += 1
+    i = hiddenIndex = hiddenIndex + 1
+except StopIteration :
+  pass
+
+>>> it = iter( range(10,30,5) )   # start, stop, step
+>>> i = hiddenIndex = 301  # firstOfI
+>>> try :
+...   while True :
+...     item = next( it )
+...     print( "Value of i and item :", i, item )
+...     i += 1
+...     i = hiddenIndex = hiddenIndex + 1
+... except StopIteration :
+...   pass
+... 
+Value of i and item : 301 10
+Value of i and item : 302 15
+Value of i and item : 303 20
+Value of i and item : 304 25
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+～～～～～～～～～～～～～～～～～～ break ～～～～～～～～～～～～～～～～～～
+
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+###################################################################################################################
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+          The Pathonic concept of generators and generator expressions
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+###################################################################################################################
+
+Actually，Python is pushing the idea of iterators to the limit ...  # and Python does this not just for iterators ... 
+
+Google : youtube star trek monologue (choose the first one - the one that takes 0:39 to play)
+
+###################################################################################################################
+
+                     1. The Pythonic concept of generators and the use of 'yield'
+
+1. A generator-function (call it 'ge') is any function that contains one or more 'yield' statements.
+
+2. When a generator-function (e.g., 'ge()') is called, it just returns a generator object (call it 'geObj'). A generator-iterator-object IS an iterator-object. Therefore, this generator object 'geObj', which is officially called a "generator iterator object", can then be used as an iterator object in a 'next()' call ( i.e., next( geObj ) ).
+
+3. Whenever 'next( geObj )' is executed, it will cause the underlying generator-function 'ge' to be "called" (i.e., next() simply "calls" the underlying ge() via the attributes of geObj), thereby obtaining the-value-to-be-returned (by this call to next()).
+
+4. The execution of 'ge()' will be "frozen" as soon as one of its 'yield' statements gets executed. Next time, when this 'ge()' is "called" again (whether by 'next()' or not), its execution resumes from the next statement following that 'yield' statement.
+
+5. If the execution of this generator-function ('ge()') reaches its end without encountering any 'yield' statement, it will cause the execution of 'next( geObj )' to raise a 'StopIteration' exception (recall that the for-loop construct of Python is designed to stop its looping behavior whenever a 'StopIteration' exception has been raised).
+
+To remember :
+
+  'ge()' contains 'yield'
+  geObj = ge()
+  # then ...
+  next( geObj )
+  next( geObj )
+  ...
+  # until StopIteration is raised
+
+Note: 
+
+  when we ourselves want to run 'next(x)' to get a next-value from 'x', we CAN choose to do something like 'next(x, -1)', where -1 is a value we are sure that will not occur as a next-value of 'x'. This way, when 'x' has exhausted all its values, 'next()' will return -1 to mean "no more next-values" instead of raising the StopIteration exception (however, note that the Python for-loop construct IS implicitly expecting to get a StopIteration exception when all next-values of 'x' have been exhausted).
+
+In effect, Python generators (= functions that contain 'yield' statements) are a novell application of the concept (and its accompanying implementation) of coroutines originally designed for "cooperative multitasking" (Wiki). It's a completely new application of coroutines for sequential programming.
+
+>>> def GenFunc() :
+...   yield 0
+... 
+>>> 
+
+# Two meanings of 'yield' in English : (1) amount of crop produces, profit returns ; (2) "Give way!"
+
+>>> type( GenFunc )
+<class 'function'>
+
+>>> GenFunc()
+<generator object GenFunc at 0x10523d9b0>
+
+>>> genObj = GenFunc()   # in other examples below, instead of calling it 'generator', we will call it 'geObj'
+
+>>> type( genObj )
+<class 'generator'>
+
+>>> genObj
+<generator object GenFunc at 0x100b53690>
+
+>>> next( genObj )
+0
+
+>>> next( genObj )
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+>>> dir( genObj )
+['__class__', '__del__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__iter__', '__le__', '__lt__', '__name__', '__ne__', '__new__', '__next__', '__qualname__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'close', 'gi_code', 'gi_frame', 'gi_running', 'gi_suspended', 'gi_yieldfrom', 'send', 'throw']
+
+# what are we looking for in the above result of 'dir( genObj )'?
+
+>>> iter( GenFunc() )
+<generator object GenFunc at 0x100cd31c0>
+
+>>> iter( genObj )
+<generator object GenFunc at 0x100b53690>
+
+>>> for i in GenFunc() :
+...   print( i )
+... 
+0
+>>> 
+
+>>> for i in genObj :
+...   print( i )
+... 
+0
+>>> 
+
+# What does the above two writings of 'for' tell us?
+
+Here is what is said about generators on the Web ...
+
+a generator is a routine that can be used to control the iteration behaviour of a loop. All generators are also iterators. A generator is very similar to a function that returns an array, in that a generator has parameters, can be called, and generates a sequence of values. However, instead of building an array containing all the values and returning them all at once, a generator yields the values one at a time, which requires less memory and allows the caller to get started processing the first few values immediately. In short, a generator looks like a function but behaves like an iterator.
+
+In Python, a generator can be thought of as an iterator that contains a frozen stack frame. Whenever next() is called on the iterator, Python resumes the frozen frame, which executes normally until the next yield statement is reached. The generator's frame is then frozen again, and the yielded value is returned to the caller.
+
+# Let us now define a generator function named 'OnlyTwice' (it only "yields" an integer-number twice ...)
+
+>>> def OnlyTwice() :
+...   yield 30
+...   yield 50
+... 
+>>>
+
+>>> type( OnlyTwice )
+<class 'function'>
+
+# So, this 'OnlyTwice()' appears to be a normal function
+
+>>> dir( OnlyTwice )
+['__annotations__', '__call__', '__class__', '__closure__', '__code__', '__defaults__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__get__', '__getattribute__', '__globals__', '__gt__', '__hash__', '__init__', '__kwdefaults__', '__le__', '__lt__', '__module__', '__name__', '__ne__', '__new__', '__qualname__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__']
+
+>>> def F2023_0508() :
+...   pass
+... 
+>>> dir( F2023_0508 )
+['__annotations__', '__call__', '__class__', '__closure__', '__code__', '__defaults__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__get__', '__getattribute__', '__globals__', '__gt__', '__hash__', '__init__', '__kwdefaults__', '__le__', '__lt__', '__module__', '__name__', '__ne__', '__new__', '__qualname__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__']
+
+# The attributes of this 'OnlyTwice' are exactly the same as the attributes of 'F2023_0508' (an ordinary function)
+
+# However, what 'OnlyTwice()' returns is anything but ordinary ...
+
+>>> geObj = OnlyTwice()
+
+>>> type( geObj )
+<class 'generator'>
+
+>>> dir( geObj )
+['__class__', '__del__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__iter__', '__le__', '__lt__', '__name__', '__ne__', '__new__', '__next__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'close', 'gi_code', 'gi_frame', 'gi_running', 'send', 'throw']
+
+# what 'OnlyTwice()' returns (a "generator") can be treated both as an iterable (since it has '__iter__()') and also as an iterator (since it also has '__next__()')
+
+# Below shows that what 'OnlyTwice()' (a generator function) returns (a generator) can indeed be treated as an iterator.
+
+>>> next( geObj )
+30
+>>> next( geObj )
+50
+>>> next( geObj )
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+# Since we have "exhausted" the "contents" of 'geObj', we had better start the whole thing anew ...
+
+>>> geObj = OnlyTwice()
+
+# Theoretically, 'iter( geObj )' should get us an iterator
+
+>>> iter( geObj )
+<generator object OnlyTwice at 0x7f319c888708>
+
+>>> iter( OnlyTwice() )     # hsia: actually, the object bound to 'OnlyTwice' does NOT offer '__iter__()' ... (comment???)
+<generator object OnlyTwice at 0x7f319c888798>
+
+# However, 'iter( geObj ) only gets us a "generator object", which can nevertheless be treated as an iterator object
+
+>>> it = iter( OnlyTwice() )
+
+>>> dir( it )
+['__class__', '__del__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__iter__', '__le__', '__lt__', '__name__', '__ne__', '__new__', '__next__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'close', 'gi_code', 'gi_frame', 'gi_running', 'send', 'throw']
+
+>>> next( it )
+30
+>>> next( it )
+50
+>>> next( it1 )
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+>>> it1 = iter( geObj )
+
+>>> next( it1 )
+30
+>>> next( it1 )
+50
+>>> next( it1 )
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+---------------------------------------------------------------------------
+
+# Let us now recall Python for-loop 的 解剖細節
+
+# That is, recall that the following two code fragments are semantically equivalent
+
+>>> it = iter( (3,4,5) )
+
+>>> try :
+...   while True :
+...     i = next( it )
+...     print( i * 10 )
+... except StopIteration :
+...   pass
+... 
+30
+40
+50
+
+>>> for i in (3,4,5) :
+...   print( i * 10 )
+... 
+30
+40
+50
+
+Recall also, that the main idea of Python's for-loop construct is
+
+    for i in SOMETHING :
+      ... # code that can optionally access 'i', including changing its value
+
+which is equivalent to the following code fragment
+
+    it = iter( SOMETHING )
+    try :
+      while True :
+        i = next( it )
+        ... # code that can optionally access 'i', including changing its value
+    except StopIteration :
+      pass
+
+# 且讓我們來把exactly the same idea套用到generator functions的身上試看看...
+
+# >>> def OnlyTwice() :
+# ...   yield 30
+# ...   yield 50
+# ... 
+# >>> 
+
+>>> it = iter( OnlyTwice() )
+>>> try :
+...   while True :
+...     i = next( it )
+...     print( i * 10 )
+... except StopIteration :
+...   pass
+... 
+300
+500
+
+# It works！
+
+>>> for i in OnlyTwice() :
+...   print( i * 10 )
+... 
+300
+500
+
+# Yeah！！！
+
+# 而這就是以下程式碼會work的道理
+
+### Generator functions ###
+
+def updown(n):
+  """Generator that goes up to n and down again."""
+  for i in range(n):
+    yield i
+  for i in range(n, -1, -1):
+    yield i
+
+for i in updown(5):
+  print(i, end=', ')
+0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0,
+
+def updown2(n):
+  """Alternative version using yield from."""
+  yield from range(n)
+  yield from range(n, -1, -1)
+
+for i in updown2(5):
+  print(i, end=', ')
+0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0,
+
+def fib(n):
+  """Return the next Fibonacci number up to n."""
+  a, b = 1, 1
+  for i in range(n):
+    yield a
+    a, b = b, a + b
+
+for i in fib(10):
+  print(i, end=', ')
+1, 1, 2, 3, 5, 8, 13, 21, 34, 55,
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+～～～～～～～～～～～～～～～～～～ break ～～～～～～～～～～～～～～～～～～
+
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+                                2. Generator expressions
+
+
+### Generator expressions - Syntax sugar for simple generators ###
+
+# What does 'syntactic sugar' or 'syntax sugar' mean?
+
+FROM  # generator function
+
+def odd(n):
+  """Traditional generator."""
+  for i in range(n):
+    if i %2 == 1:
+      yield i
+
+for i in odd(10):
+  print(i, end=', ')
+1, 3, 5, 7, 9,
+
+TO  # the so-called "generator expression" (df= the use of a generator in specifying an expression)
+
+genExpr = ( i for i in range(10) if i%2 == 1 )  
+
+# 'i for i in range(10) if i%2 == 1' is a generator expression
+
+# Notice the use of '(' and ')' here
+
+for i in genExpr :
+  print(i, end=', ')
+
+# How is the above code fragment translated ???
+
+HOW ABOUT THIS ...
+
+def Anonymous() :
+  for i in range(10) :
+    if i%2 == 1 :
+      yield i
+
+for i in Anonymous() :
+  print( i, end = ', ' )
+
+>>> genExpr = ( i for i in range(10) if i%2 == 1 )  # 'i for i in range(10) if i%2 == 1' is a generator expression
+
+>>> genExpr
+<generator object <genexpr> at 0x7fd80822ceb0>
+
+>>> for i in genExpr :
+...   print(i, end=', ')
+... 
+1, 3, 5, 7, 9, 
+
+
+
+>>> def Anonymous() :
+...   for i in range(10) :
+...     if i%2 == 1 :
+...       yield i
+... 
+>>> 
+
+>>> for i in Anonymous() :
+...   print( i, end = ', ' )
+... 
+1, 3, 5, 7, 9, 
+
+-----------------------------------------------------
+
+# A much bolder attempt in using generator expressions ...
+
+# Be very careful when you do the kind of things below. Also be informed that this is almost impossible in other languages.
+
+def SeqOfCubic( start ) :   # a generator that will never be "exhausted"
+  n = start
+  while True :
+    yield n**3
+    n += 1
+
+infiniteSeq = ( n*n for n in SeqOfCubic( 2 ) )  # a generator expression that produces a "potentially infinite" sequence
+                                                # however, SeqOfCubic() is resumed once only when 'next()' is called upon
+
+for m in infiniteSeq :
+  if m < 50000 :
+    print( m )
+  else :                    # without this 'else' for "breaking out of the loop", we will be stuck in an infinite loop
+    break
+
+
+>>> def SeqOfCubic( start ) :
+...   n = start
+...   while True :
+...     yield n**3
+...     n += 1
+... 
+>>> 
+
+>>> infiniteSeq = ( n*n for n in SeqOfCubic( 2 ) )
+
+>>> for m in infiniteSeq :
+...   if m < 50000 :
+...     print( m )
+...   else :
+...     break
+... 
+64
+729
+4096
+15625
+46656
+
+-------------------------------------------------------------------------------
+
+# A visit to the past (at the beginning of this course )
+
+# Q : Why is it the case that ...
+
+>>> for i in ( (x,y,z) for x in range(1,30) for y in range(x,30) for z in range(y,30) if x**2 + y**2 == z**2 ) :
+...   print( i )
+... 
+(3, 4, 5)
+(5, 12, 13)
+(6, 8, 10)
+(7, 24, 25)
+(8, 15, 17)
+(9, 12, 15)
+(10, 24, 26)
+(12, 16, 20)
+(15, 20, 25)
+(20, 21, 29)
+
+# A : because the evaluation of '( (x,y,z) for x in range(1,30) for y in range(x,30) for z in range(y,30) if x**2 + y**2 == z**2 )' returns a generator object (and, as is the case with iterators, a generator object also has a __next__() to call)
+
+>>> ( (x,y,z) for x in range(1,30) for y in range(x,30) for z in range(y,30) if x**2 + y**2 == z**2 )
+<generator object <genexpr> at 0x7fd9cbe87870>
+
+# as far as 'next()' is concerned, a generator (object) is no different from an iterator (object)
+
+# for example ...
+
+>>> b = ( (x,y,z) for x in range(1,30) for y in range(x,30) for z in range(y,30) if x**2 + y**2 == z**2 )
+
+>>> next(b)
+(3, 4, 5)
+>>> next(b)
+(5, 12, 13)
+>>> next(b)
+(6, 8, 10)
+>>> next(b)
+(7, 24, 25)
+>>> next(b)
+(8, 15, 17)
+>>> next(b)
+(9, 12, 15)
+>>> next(b)
+(10, 24, 26)
+>>> next(b)
+(12, 16, 20)
+>>> next(b)
+(15, 20, 25)
+>>> next(b)
+(20, 21, 29)
+>>> next(b)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+# Below is an example of list comprehension (to be discussed below this example)
+
+>>> a = [ (x,y,z) for x in range(1,30) for y in range(x,30) for z in range(y,30) if x**2 + y**2 == z**2 ]
+
+# Notice the use of '[' and ']' here (in the code right above)
+
+>>> a
+[(3, 4, 5), (5, 12, 13), (6, 8, 10), (7, 24, 25), (8, 15, 17), (9, 12, 15), (10, 24, 26), (12, 16, 20), (15, 20, 25), (20, 21, 29)]
+
+# Notice the difference between the following two in the above :
+
+# >>> b = ( (x,y,z) for x in range(1,30) for y in range(x,30) for z in range(y,30) if x**2 + y**2 == z**2 )
+
+# >>> a = [ (x,y,z) for x in range(1,30) for y in range(x,30) for z in range(y,30) if x**2 + y**2 == z**2 ]
+
+# Q : what is the difference that you see?
+
+
+###################################################################################################################
+
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+Comprehension - a "syntactic sugar" similar to that of generator expressions - can be used to create lists, sets and dictionaries.
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+Note : there doesn't seem to be a "tuple comprehension", and there should not be (since the use of '(' and ')' already has its meaning).
+
+###################################################################################################################
+
+Comprehension - a "syntactic sugar" similar to that of generator expressions - can be used to create lists, sets and dictionaries.
+
+Note : there doesn't seem to be a "tuple comprehension", and there should not be (since the use of '(' and ')' already has its meaning).
+
+========================== 1. List comprehension ==========================
+
+# notice the use of '[' and ']' (and not '(' and ')')
+
+>>> [ i*2 for i in (10, 20, 30) ]
+[20, 40, 60]
+
+>>> [ i*2 for i in (10, 20, 30) if i % 3 == 0 ]
+[60]
+
+
+[ i for i in range(10) ]
+
+>>> [ i for i in range(10) ]
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+-------------------------- Explanation -----------------------
+
+def ListComprehension() :
+  resultList = ()
+  for i in range(10) :
+    resultList = resultList.__add__( (i,) )
+  return resultList
+
+ListComprehension()
+
+>>> def ListComprehension() :
+...   resultList = ()
+...   for i in range(10) :
+...     resultList = resultList.__add__( (i,) )
+...   return resultList
+... 
+>>> ListComprehension()
+(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+
+
+
+
+
+
+[ i**2 for i in range(10) if i % 2 == 1 ]
+
+>>> [ i**2 for i in range(10) if i % 2 == 1 ]
+[1, 9, 25, 49, 81]
+
+
+def ListComprehension() :
+  resultList = ()
+  for i in range(10) :
+    if i%2 == 1 :
+      resultList = resultList.__add__( (i**2,) )
+  return resultList
+
+ListComprehension()
+
+>>> def ListComprehension() :
+...   resultList = ()
+...   for i in range(10) :
+...     if i%2 == 1 :
+...       resultList = resultList.__add__( (i**2,) )
+...   return resultList
+... 
+>>> ListComprehension()
+(1, 9, 25, 49, 81)
+
+
+-------------------------- In comparison -----------------------
+
+>>> ( i*2 for i in (10, 20, 30) )
+<generator object <genexpr> at 0x7fd80822c510>
+>>> a = ( i*2 for i in (10, 20, 30) )
+>>> next(a)
+20
+>>> next(a)
+40
+>>> next(a)
+60
+>>> next(a)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+>>> ( i for i in range(3) )
+<generator object <genexpr> at 0x7fd80813d2e0>
+>>> a = ( i for i in range(3) )
+>>> next(a)
+0
+>>> next(a)
+1
+>>> next(a)
+2
+>>> next(a)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+
+========================== 2. Set comprehension ==========================
+
+def updown(n):
+  """Generator that goes up to n and down again."""
+  for i in range(n):
+    yield i
+  for i in range(n, -1, -1):
+    yield i
+
+# notice the use of '[' and ']' (and not '(' and ')')
+
+{ i for i in updown(5) }
+
+>>> { i for i in updown(5) }
+{0, 1, 2, 3, 4, 5}
+
+-------------------------- Explanation -----------------------
+
+# To make an empty set in Python, use the set() function with no arguments; if we use empty curly brackets "{}", we will get an empty dictionary instead.
+
+def SetComprehension() :
+  resultSet = set()
+  for i in updown(5) :
+    resultSet.update( {i,} )
+  return resultSet
+
+SetComprehension()
+
+>>> def SetComprehension() :
+...   resultSet = set()
+...   for i in updown(5) :
+...     resultSet.update( {i,} )
+...   return resultSet
+... 
+>>> SetComprehension()
+{0, 1, 2, 3, 4, 5}
+
+
+
+{ i**3 for i in updown(5) }
+
+>>> {i**3 for i in updown(5)}
+{0, 1, 64, 8, 27, 125}
+
+# It's your turn to translate this comprehension expression into generator-function + normal function definition + function call?
+
+-------------------------- In comparison -----------------------
+
+>>> ( i**3 for i in updown(5) )
+<generator object <genexpr> at 0x7fd80822c5f0>
+>>> a = ( i**3 for i in updown(5) )
+>>> next(a)
+0
+>>> next(a)
+1
+>>> next(a)
+8
+>>> next(a)
+27
+>>> next(a)
+64
+>>> next(a)
+125
+>>> next(a)
+64
+>>> next(a)
+27
+>>> next(a)
+8
+>>> next(a)
+1
+>>> next(a)
+0
+>>> next(a)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+-------------------------- END - comparison -----------------------
+
+# 課堂即時作業
+
+Translate the following for-loop into something equivalent which does not involve any comprehension expression. The way you translate it must look like something that can be automated. (Any equivalent code is acceptable, as long as (1) it does not involve the use of comprehension expressions and (2) it appears to be a translation scheme that can be automated.)
+
+for i in [ i**3 for i in updown(5) ]
+  print( "Value of i :", i )
+
+# Why does your answer work? Why is it equivalent to the above code?
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+～～～～～～～～～～～～～～～～～～ break ～～～～～～～～～～～～～～～～～～
+
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+========================== 3. Dictionary comprehension ==========================
+
+>>> subjects = ['ann', 'bob', 'charles']   # any iterable will do
+>>> ages = [23, 34, 45]                    # any iterable will do
+
+>>> aDict = { "Name is " + subject : "Age is " + str( age ) 
+              for subject, age in zip(subjects, ages)
+            }
+
+>>> aDict
+{'Name is ann': 'Age is 23', 'Name is bob': 'Age is 34', 'Name is charles': 'Age is 45'}
+
+-------------------------- Explanation -----------------------
+
+# Let us start by investigating zip - a very commonly seen method for creating dictionaries
+
+>>> a = zip( (1,2,3), (4,5,6), (7,8,9) )  # note that we deliberately give three and not two arguments in zip()
+
+>>> a
+<zip object at 0x7fd9ce15a048>
+
+>>> list(a)     # <-----------------------
+[(1, 4, 7), (2, 5, 8), (3, 6, 9)]
+>>> tuple(a)
+()
+>>> dict(a)
+{}
+>>> list(a)     # <-----------------------
+[]
+
+# What happened??? (two exactly the same calls 'list(a)' give completely different results)
+
+# what is a zip object anyway?
+
+>>> help( a )
+Help on zip object:
+
+class zip(object)
+ |  zip(iter1 [,iter2 [...]]) --> zip object
+ |  
+ |  Return a zip object whose .__next__() method returns a tuple where
+ |  the i-th element comes from the i-th iterable argument.  The .__next__()
+ |  method continues until the shortest iterable in the argument sequence
+ |  is exhausted and then it raises StopIteration.
+ |  
+ |  Methods defined here:
+ |  
+ |  __getattribute__(self, name, /)
+ |      Return getattr(self, name).
+ |  
+ |  __iter__(self, /)          # <---------------
+ |      Implement iter(self).
+ |  
+ |  __new__(*args, **kwargs) from builtins.type
+ |      Create and return a new object.  See help(type) for accurate signature.
+ |  
+ |  __next__(self, /)          # <---------------
+ |      Implement next(self).
+ |  
+ |  __reduce__(...)
+ |      Return state information for pickling.
+(END)
+
+# So, a zip object is both an iterable ( since it has __iter__() ) and an iterator ( since it has __next__() ).
+
+# Now, how does 'list()' work?
+
+>>> help( list )
+Help on class list in module builtins:
+
+class list(object)
+ |  list() -> new empty list
+ |  list(iterable) -> new list initialized from iterable's items
+ |  
+ |  Methods defined here:
+ |  
+ |  __add__(self, value, /)
+ ...
+
+# So, 'list()' accepts an iterable as its sole argument and return a list "initialized from the iterable's items"
+
+# How does 'list()' work in producing a list from the given iterable? What do you think???
+
+HOW ABOUT DOING SOMETHING LIKE THE FOLLOWING ...
+
+def ResultingList( anIterable ) :
+  resultList = ()
+  for i in anIterable :
+    resultList = resultList.__add__( (i,) )
+  return resultList
+
+ResultingList( givenIterable )
+
+# i.e.,
+
+>>> a = zip( (1,2,3), (4,5,6), (7,8,9) )
+
+>>> def ResultingList( anIterable ) :
+...   resultList = ()
+...   for i in anIterable :
+...     resultList = resultList.__add__( (i,) )
+...   return resultList
+... 
+>>> 
+
+>>> ResultingList( a )
+((1, 4, 7), (2, 5, 8), (3, 6, 9))
+
+>>> next( a )
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+# That is, as a side effect of executing 'ResultingList( a )' (which implicitly calls 'next(a)' until StopIteration is raised), the elements of the zip object 'a' have been "exhausted". (This is actually due to the (inappropriate???) design that the zip object just returns itself (when its __iter__() is being called) as the resulting iterator. If the zip object returns something else as the resulting iterator (when its __iter__() is being called), the same situation would not have occurred.)
+
+# This naturally leads to the following result ...
+
+>>> ResultingList( a )
+()
+
+# In other word, a zip object is (deliberately made to be???) a "one time only" iterable.
+
+# This explains why in many many examples, zip objects are just used as "one time only" iterables.
+
+# BTW, here is a convenient way to use Python's for-construct
+>>> for a, b in ( (10, 20), (30, 40) ) :  
+...   print( a, b )
+... 
+10 20
+30 40
+# END - Convenience offered by Python's for-construct
+
+# Back to our investigation of 'zip()'
+
+>>> subjects = ['ann', 'bob', 'charles']
+>>> ages = [23, 34, 45]
+
+>>> a = zip( subjects, ages )  # recall that a zip object is an iterable (a "one time only" iterable in fact)
+
+>>> next(a)
+('ann', 23)
+
+>>> next(a)
+('bob', 34)
+
+>>> next(a)
+('charles', 45)
+
+>>> next(a)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+>>> for subject, age in zip( subjects, ages ) :
+...   print( subject, age )
+... 
+ann 23
+bob 34
+charles 45
+
+# END - Investigation of 'zip()'
+
+# Back to our investigation of dictionaries - dictionary comprehension in particular
+
+# First, some understanding of dictinaries ...
+
+# Recall that a dictionary is a set, and that the following are different ways of creating the same dictionary (either by calling 'dict()' or by directly specifying the content of a dictionary) :
+
+a = { 'one': 1, 'two': 2, 'three': 3 }
+b = dict( one = 1, two = 2, three = 3 )       
+c = dict( zip( ['one', 'two', 'three'], [1, 2, 3] ) )  # however, a dictionary is not a "one time only" iterable
+d = dict( [ ('two', 2), ('one', 1), ('three', 3) ] )
+e = dict( { 'three': 3, 'one': 1, 'two': 2 } )
+
+for key, value in a.items() :
+  print( key, ":", value )
+
+for key in b :
+  print( key, ":", b[key] )
+
+>>> a = { 'one': 1, 'two': 2, 'three': 3 }
+>>> b = dict( one = 1, two = 2, three = 3 )       
+>>> c = dict( zip( ['one', 'two', 'three'], [1, 2, 3] ) )
+>>> d = dict( [ ('two', 2), ('one', 1), ('three', 3) ] )
+>>> e = dict( { 'three': 3, 'one': 1, 'two': 2 } )
+>>> 
+>>> a
+{'one': 1, 'two': 2, 'three': 3}
+>>>> e
+{'three': 3, 'one': 1, 'two': 2}
+>>> 
+>>> for key, value in a.items() :
+...   print( key, ":", value )
+... 
+one : 1
+two : 2
+three : 3
+>>> for key in e :
+...   print( key, ":", e[key] )
+... 
+three : 3
+one : 1
+two : 2
+>>> c
+{'two': 2, 'one': 1, 'three': 3}
+>>> d
+{'two': 2, 'one': 1, 'three': 3}
+>>> e
+{'two': 2, 'one': 1, 'three': 3}
+
+# END - Some understandings of dictionaries
+
+# Finally, dictionary comprehensions (what is it) ...
+
+# >>> subjects = ['ann', 'bob', 'charles']
+# >>> ages = [23, 34, 45]
+
+>>> aDict = { "Name is " + subject : "Age is " + str( age ) 
+              for subject, age in zip(subjects, ages)
+            }
+
+>>> for first, second in aDict.items() :
+...   print( first + ',', second )
+... 
+Name is ann, Age is 23
+Name is bob, Age is 34
+Name is charles, Age is 45
+
+# How is the dictionary named 'aDict' created from the above expression ( '{ "Name is " + ... ages) }' )?
+
+def ResultingDict( aZipObj ) :
+  resultDict = {}
+  for key, value in aZipObj :
+    resultDict.update( { "Name is " + key : "Age is " + str( value ) } )
+  return resultDict
+
+ResultingDict( zip( subjects, ages ) )
+
+>>> def ResultingDict( aZipObj ) :
+...   resultDict = {}
+...   for key, value in aZipObj :
+...     resultDict.update( { "Name is " + key : "Age is " + str( value ) } )
+...   return resultDict
+... 
+>>> 
+
+>>> ResultingDict( zip( subjects, ages ) )
+{'Name is ann': 'Age is 23', 'Name is bob': 'Age is 34', 'Name is charles': 'Age is 45'}
+
+https://people.duke.edu/~ccc14/bios-821-2017/lessons/Python_03__%20Iterators_Generators.html
+
+-------------------------- In comparison -----------------------
+
+# >>> aDict
+# {'Name is ann': 'Age is 23', 'Name is bob': 'Age is 34', 'Name is charles': 'Age is 45'}
+# >>> type(aDict)
+# <class 'dict'>
+
+>>> a = ( { "Name is " + subject : "Age is " + str( age ) } for subject, age in zip(subjects, ages) )
+
+>>> type(a)
+<class 'generator'>
+
+>>> next(a)
+{'Name is ann': 'Age is 23'}
+>>> next(a)
+{'Name is bob': 'Age is 34'}
+>>> next(a)
+{'Name is charles': 'Age is 45'}
+>>> next(a)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+
+###################################################################################################################
+
+# Quiz time. Explain the results of the two calls to 'g()'.
+
+def f():
+  print(f)
+f, g = 42, f
+g()  # prints 42
+del f
+g()  # raises an exception 
+
+###################################################################################################################
+
+Just for recreation ... # from iterators/generators back to iterables
+
+>>> it = iter( (10, 20, 30) )
+>>> it
+<tuple_iterator object at 0x7fd8181a24c0>
+
+>>> iList = list( it )
+>>> iList
+[10, 20, 30]
+
+>>> iList = list( it )
+>>> iList
+[]
+
+# Q : Why?
+
+>>> gen = ( x * x for x in ( 10, 20, 30 ) )
+>>> gen
+<generator object <genexpr> at 0x7fd80813d2e0>
+
+>>> iList = list( gen )
+>>> iList
+[100, 400, 900]
+
+>>> iList = list( gen )
+>>> iList
+[]
+
+>>> def G( ) :
+...   for i in range( 5 ) :
+...     yield i*i
+... 
+>>> genObj = G()
+>>> genObj
+<generator object G at 0x7fd80822cf20>
+
+>>> gList = list( genObj )
+>>> gList
+[0, 1, 4, 9, 16]
+
+>>> gList = list( genObj )
+>>> gList
+[]
+
+
+
+
+
+
+
+
+
+

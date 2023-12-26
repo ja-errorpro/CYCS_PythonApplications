@@ -1,0 +1,3858 @@
+Week-of-1219(Week14Materials).txt
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+                          Think the Python way
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+The original idea (no reason not to still have this idea) :
+
+  ＊ Python scripts are the same as UNIX/Linux shell scripts and can be run as normal UNIX/Linux commands (= C/C++ applications)
+
+  ＊ Python environment can serve as an operating system shell
+
+作法一： 以Linux/Unix為準(cmd為python script)
+
+Use the argparse package to analyze command-line arguments
+Can do "list piping"
+
+  > cat ~/bin/argParseProg03Out                        # a Python script
+  #!/usr/bin/env python3.9
+  # OR just #!/Users/wang/opt/anaconda3/bin/python3.9
+  ...
+
+  > echo $PATH          # assuming that the current user is 'wang'
+  ...:/Users/wang/bin
+
+  > argParseProg03Out | argParseProg03In               # what we call "list piping" in this course (the output-and-input of a list)
+
+  > argParseProg03Out -of Result357.py && argParseProg03In -if Result357.p   # Linux cmds as Python scripts
+                                                       # parameter name : "of" ; parameter value : "Result357.py"
+
+  > cat ~/bin/argParsProg03Out                         # the way to do argument parsing in a Python script
+  ...
+  import argparse
+  
+  parser = argparse.ArgumentParser()
+  
+  # the user may specifie the option '-of' on the command line (when invoking this script), use the "outfile" attribute to correspond to it
+  parser.add_argument( '-of', '--outfile', type = str, help = 'the file to print to' ) # for keyword argument (options)
+  parser.add_argument( '-ov', '--outputVar', type = str, help = 'name of the variable to assign to in the output file' )
+  
+  args = parser.parse_args()
+  
+  if args.outfile != None :
+    ...
+    outfile = open( args.outfile, mode = 'w' )
+    ...
+
+  # Suppose the user command for invoking this script is >>argParseProg03Out -of Result357.py<<
+  # Then, execution of 'print( args.outfile, args.outputVar )' will give us this output >>Result357.py None<<
+  ...
+  
+  > cat ./bin/argParsProg03In
+
+  # # To input a tuple or list from a file
+  # inputStr = infile.read()        # <------------------ either read it (content of the entire file) in here (as ONE string)
+  # # OR
+  # inputStr = sys.stdin.read()     # <------------------ or read it (content of the entire file) in here (as ONE string)
+
+  # # To translate the input string into a real list/tuple
+  # a = eval( inputStr )            # <------------------ realizing external file content as ONE list/tuple/what-have-you
+
+作法二： 以Python為準(用'B( <cmd> )'或'os.system( <cmd> )'來執行Linux/Unix commands)
+        (however, note that python can only fork a subshell to execute the given comnmand)
+
+  ＊ Access contents of os.environ (the environment variables of this Linux process)
+  ＊ Use os.exec() family and os.system() to execute UNIX/Linux commands (in child-processes)
+  ＊ Check dir(os) to see how we can use the instance functions of (the) os (object) to interact with the external environment
+  ＊ But keep in mind that this is just a sub-shell (forked by running 'python' in the original parent shell)
+
+  > cat ~/bin/StartUpScript.py 
+  #!/usr/bin/env python3.9
+  ...
+
+  > export PYTHONPATH=$PYTHONPATH:~/bin    # So that 'sys.path' will contain "$HOME/bin" as one of the import paths
+  # > python3.9 -i StartUpScript.py          # 本來會work，但現在好像不work了
+
+  > python3.9 -i ~/bin/StartUpScript.py    # 只好直接import了；應等於 >> from StartUpScript import * <<，只是不用受到sys.path的束縛而已
+
+  # Q : 請解釋'import'與sys.path的關聯
+
+  >>> #-------------------------------
+
+  >>> os.system( "alias date1=date ; date1" )
+  sh: date1: command not found
+  32512
+
+  >>> os.system( "export date1=date ; $date1")
+  2023年 6月 7日 週三 10時04分47秒 CST
+  0
+
+  >>> #-------------------------------
+
+  >>> B( 'pwd' )                 # 只是呼叫os.system()而已。不過可以少寫幾個字。
+  <SomeDir>/PythonProj/Testing
+  
+  >>> os.chdir( '..' )           # 不過也只是改到自己的environ[]而已，無法改到parent process的environ[]
+  
+  >>> B( 'pwd' )
+  <SomeDir>/PythonProj
+  
+  >>> B( 'cd /' )
+  
+  >>> B( 'pwd' )
+  <SomeDir>/PythonProj           # Why? - A question for users of C/C++-plus-Linux
+
+  # Don't know how to relate to C-styled "exit status" though
+
+  # More to be explored ...
+
+-------------------------------------------------------------------------------
+
+Python data structure : 
+
+  list structures (reference : the OurScheme project) 
+  # "龍骨"是vector, and there are only "lists"! No "dotted pairs"!
+
+  (and we use names to "refer to" (point to, in fact) list structures)
+
+The traditional distinction between "value" and "object" is gone！
+
+However, there is now a new notion of "primitive objects" ( or : "primitive-value objects" )
+                                      # these are the leaf-nodes of all list-structures 
+                                      # the so-called "atoms" in OurScheme 
+                                      # these are the stuff (other than 各種括號與逗號) that get printed when we print list-structures
+other than three other newly introducted notions of objects : (a) class-objects, (b) function-objects, and (c) module-objects.
+
+Instance objects df= any object that is created via the use of 'TypeName()' ; # What we mean by "instance objects" in this course.
+e.g., >>a = ClassN()<< creates an instance object, which is then pointed at by 'a'
+
+So, there are now five categories of objects :
+
+  class objects (created via 'class Name1 ...')
+  function objects (created via 'def Name2 ...')
+  module objects (created via 'import Name3' or the like)
+  instance objects (created via 'name4 = Name5()') 
+  primitive-value objects (the "atoms") (They just exist ; no explicit creation needed)
+
+  # All objects are (implicitly realized as) "structs". (所有語言都是用structs來implement the notion of objects)
+  # 這就是everything is an object的真義
+
+The variable-value paradigm(流派) (a variable is a place-holder for a value) 
+            vs. 
+the name-objects paradigm (the binding of a name is an object) 
+
+From the perspective of the variable-value paradigm： 
+  A list-structure is a VALUE ！！！  
+  And the simplest list-structure is a "primitive object" (用本課程的話來說) - a Lisp-"atom" in fact ！！！
+
+Every assignment statement is a (re-)declaration of a "local name" (it is actually a NAME-REBINDING action). 
+  
+  Meaning of 'var1 = ...' (suppose there is no corresponding 'global' or 'nonlocal' declaration)
+
+    For the being-executed function, the being (re-)declared "local name" (var1) is a (temporary) local var/func (of this function).
+
+    For a module (i.e., 'var1 = ...' is not in a function), the being (re-)delcared "local name" (var1) is called a global var/func ;
+    var1 is, in the actual effect, a (permanent) instance data/func of this module-obj (if this module has been "import"ed).
+
+  Meaning of 'obj1.nameN = ...'
+
+    For the corresponding object ( obj1.nameN = ... ), the being (re-)declared "local name" (nameN) is a (permanent) instance data/func (of this obj).
+
+  註：此處所謂的'permanent'，指的是for the remaining part of executing the entire program.
+     此處所謂的'temporary'，指的是for the remaining part of executing this function.
+
+  Meaning of 'del var1' 與 'del obj1.nameN' : 只是從目前的name space之中delete這個name而已，並沒有delete「name這個pointer所指向的object」。
+
+-------------------------------------------------------------------------------
+
+Python的exception handling policy跟Java的exception handling policy基本上是一樣的。 
+
+以下只是列出幾個比較要注意的地方。  
+
+def F() :
+  x = int( "four" )
+
+try :
+  F()
+except ValueError as e :
+  print( "The error was :", e )
+
+class SpecialException( Exception ) :
+  pass
+
+def G() :
+  raise SpecialException( "Hi" )
+
+try :
+  G()
+except Exception as e :
+  print( "The error was :", e )
+
+-------------------------------------------------------------------------------
+
+slice
+
+Preliminary :
+  a = (10, 20, 30, 40, 50, 60, 70 )
+  注意a[4]與a[-3]是同一個   # Python tuple或list 的index 可以是負的
+  Therefore, a[2:-2] makes perfect sense in Python (而且是由左到右)
+
+a[ 欄位一：欄位二：方向與increment ]
+
+每個欄位都可以不寫   # 'a[:]' = 'a[::]'
+
+欄位三(方向與increment)的default是1(由左往右、每次加一)  
+# 換言之，欄位三(不管寫或沒寫)永遠有表達方向
+
+方向是以欄位三(不管寫或沒寫)所表達的方向為準
+
+如果欄位ㄧ與欄位二都有寫、就表達了一個方向，此方向不可與欄位三所表達的方向相反(如果相反就是"空")
+
+所以先看欄位三(以決定是往右還是往左)，然後再決定起點與終點 (方向決定欄位ㄧ與欄位二誰是起點誰是終點)
+
+起點或終點：有寫就是「不包括它」，沒寫就是「到極端點且包括極端點」
+
+# 'a[:]' (或 'a[::]') 與 'a' 不同     # 原版 vs. copy版
+
+A slice is just a copy of the "top-level pointers" ！！！   # the so-called "shallow copy"
+You should know what this means.
+# When we execute 'b = a[:]', what will happen?
+# When we execute 'a[3] = 10', what will happen?
+# When we execute 'a[2][1] = 1000', what will happen?
+
+Note that there is also a "deep copy" function.
+
+import copy
+b = copy.deepcopy( a )     # 但別亂用！ (why?)
+
+-------------------------------------------------------------------------------
+
+         // (取整數的除) 與 % (generalized的餘數 ： 要加這麼多才能得到原來的數)
+
+# // (在兩個整數"商"之間取較小的那個) # take the floor of the resulting value (of the division)
+
+>>> 5.6//1.8
+3.0               # 3.0與4.0這兩個、較小的那個
+>>> 5//2
+2                 # 2與3這兩個、較小的那個
+>>> 5//-2
+-3                # -2與-3這兩個、較小的那個
+>>> 5.0//-2
+-3.0              # -2.0與-3.0這兩個、較小的那個
+
+# %  (要加這麼多才能得到原來的數)
+
+>>> 5.6%1.8
+0.1999999999999995
+>>> 5%2
+1
+>>> 5%-2
+-1
+>>> -5//-2
+2
+>>> -5%-2
+-1
+
+-------------------------------------------------------------------------------
+
+(A kind of) formatted string and Python "printf"
+
+>>> "This is %f of %f in Python." % (20, 30)
+'This is 20.000000 of 30.000000 in Python.'
+
+>>> "This is %d of %d in Python." % (20, 30)
+'This is 20 of 30 in Python.'
+
+>>> "This is %7.3f of %5.2F in Python." % (10/3, 17/3)
+'This is   3.333 of  5.67 in Python.'
+
+>>> print( "This is %7.3f of %5.2F in Python." % (10/3, 17/3) )
+This is   3.333 of  5.67 in Python.
+
+>>> num = 12000
+>>> school = 'CYCU'
+
+>>> print( "%s has about %d students" % ( school, num ), 
+           "Or is it? ", 
+           sep = ", roughly speaking. ", 
+           end = '' 
+         ) ; print( "Let's count it." )
+CYCU has about 12000 students, roughly speaking. Or is it? Let's count it.
+
+-------------------------------------------------------------------------------
+
+The specification of long strings in Python
+
+>>> 'This' ' ' 'is' ' ' 'a' ' ' 'book'
+'This is a book'            # string concatenation of this kind is done by the parser (during "compile time")
+
+>>> ( 'This is how Python is able to '        # Comment here okay
+... 'handle very very                '        # for very long string extendex across lines
+... 'long strings.'                           # END of long string
+... )
+'This is how Python is able to handle very very                long strings.'
+
+-------------------------------------------------------------------------------
+
+"簡寫"歸"簡寫"，「文法裡根本沒這個東西」卻是另一回事
+
+a=b=c
+# assignment_stmt ::= (target_list "=")+ (starred_expression | yield_expression)  
+# An assignment statement evaluates the expression list (remember that this can be a single expression or a comma-separated list, the latter yielding a tuple) and assigns the single resulting object to each of the target lists, from left to right.
+# 重點： there is no mentioning of how 'a=b=c' comes about。     # even though this may not be very important ...
+
+a>b>10         # a op1 b op2 c df= a op1 b and b op2 c  # 好像是這樣。 # 此即所謂的"operator chaining"
+
+-------------------------------------------------------------------------------
+
+>>3 not in list1<< vs. >>not (3 in list1)<<          # Both okay ; however, >>5 not > 8<< not okay
+
+-------------------------------------------------------------------------------
+
+                 Everything is an object的"事前準備工作"
+
+                          class vs. type             # Python對 type的概念 與 class的概念 的釐清
+
+Java/C/C++ : A 必須是個type或class、我們才能使用A來宣告變數 ( e.g., A a ; )  
+
+             # What exactly is the difference between a type and a class？ So, int and float are (primitive) types. But is a class a type?
+
+Python     : A 必須是個type (或曰：A必須是'type'這個class的instance) 我們才能使用A來產生object ( e.g., A() )
+
+             # 順便說一下：只有class-objects才會是type這個class的instance (而int與float與str都是class-objects (Yes, 它們都是(bound to) objects))
+
+             # >>> ICE = int
+             # 
+             # >>> int = 10
+             # >>> int
+             # 10
+             # 
+             # >>> a = int()
+             # Traceback (most recent call last):
+             #   File "<stdin>", line 1, in <module>
+             # TypeError: 'int' object is not callable
+             # 
+             # >>> a = ICE()
+             # >>> a
+             # 0
+             # >>> b = ICE( "123" )
+             # >>> b
+             # 123
+             # 
+             # >>> a = int( "123" )
+             # Traceback (most recent call last):
+             #   File "<stdin>", line 1, in <module>
+             # TypeError: 'int' object is not callable
+
+>>> issubclass( type, object )
+True                           # type是個class
+>>> issubclass( type, type )   
+True                           # 任何class都是自己的subclass，所以type也是自己的subclass
+
+>>> issubclass( int, type )    # 不過type並沒有任何子孫class！！！
+False
+>>> issubclass( object, type )
+False                   
+
+>>> isinstance( int, type )    # 而任何class都是type這個class的instance
+True
+>>> isinstance( object, type ) # 包括object這個class
+True
+>>> isinstance( type, type )   # 與type它自己(因為type本身是個class)
+True
+
+# 重點：任何object(包括所有的class objects)的「衍伸屬性」都包括其「所屬class」(df= 此object身為其instance的class) 的 class-data/func.
+#      因此，任何class-obj A都有'type'這個class的class-data/func；但不能在dir(A)裡show出來；因為根據規矩、如果dir(A)有、dir( instOfA )也該有才對
+
+>>> object.__mro__
+(<class 'object'>,)            # object是最「高」的class，它沒有任何super class
+>>> int.__mro__
+(<class 'int'>, <class 'object'>)  # 所有class都有ancestor class(es)，而object必是其中一個ancestor class
+>>> type.__mro__                  
+(<class 'type'>, <class 'object'>) # type這個class也不例外
+
+# BTW, dir( object )之中並沒有__mro__這個屬性。   # __mro__是type這個class(自有)的class data (__mro__屬於sorted( vars( type ) ))
+# mro : Method Resolution Order    # Q : 什麼resolution？
+
+--- 註 ---
+
+vars() 與 dir()
+  是針對object而設計
+  vars()是列出object的"自有屬性"(以及其值)，dir()是列出object的"自有屬性"+"衍伸屬性"(即所屬class與所有ancestor classes的class data/func)
+
+# vars( obj )會列出attributes的值，且未排序，所以我們通常會使用sorted( vars( obj ) )來show
+
+--- END - 註 ---
+
+>>> type( object )             # object是個type(因為它是個class)
+<class 'type'>
+>>> type( type )               # type也是個type(畢竟它是個class)
+<class 'type'>
+
+>>> isinstance( object, object )  # object這個class-object也是個instance (of object) # 因為everything is an object
+True
+>>> isinstance( object, type )    # object是個type(因為它是個class)
+True
+>>> isinstance( int, type )       # int是個type
+True
+>>> isinstance( 5, type )         # 5不是個type
+False
+>>> isinstance( type, object )    # type這個class-object也是個instance (of object) # 因為everything is an object
+True
+>>> isinstance( type, type )      # type也是個type(畢竟它是個class)
+True
+
+1. 如果有任何東西是個「object」，那這個東西就是個「instance object」
+2. 每個instance object都是某個class的instance。最最起碼、這個object必是object這個class的instance。
+
+BTW(順便說一下)：以上兩點之中所說的instance或instance object是一般OOP所稱的instance object，而不是本課程之中所謂的instance object。
+               在本課程之中說的「instance object」是指(user) explicitly new出來的object。
+
+註： 要check一個object abc是哪個class的instance，just check : abc.__class__  # 此即abc的「所屬class」 # 每個object都是一個「所屬class」的instance
+    (如果abc是個class，它就是'type'這個class的instance。如果abc是本課程所謂的instance-object，那它就是「the class that was used to create this object」的instance)
+
+註： 要check一個class-object A的parent-class(es)有哪些class(es)，check : A.__bases__   # 會列出A的immediate super class(es)
+    (A.__base__是priority最高的那個parent class；   # 如果我們確定A只有一個parent class，那就只要check這個就好。
+     A.__mro__是所有super classes(即所有ancestor-classes)的priority的順序    # Q : what priority are we talking about?
+    )
+
+2-1 所有objects都是object這個class的instance  ( 亦即：對任何object abc而言，isinstance( abc, object )必為True )
+
+3. 所有的class objects都是type這個class的instance # e.g., int與float是class objects，所以是type的instance
+   也就是說、每個class(包括object這個class)都是個type(也就是type這個class的instance) 
+   # i.e., 只要issubclass( ., object )是True，isinstance( ., type )就必為True
+4. type這個object也是type這個class的instance (因為type是個class)
+
+註： Check一個object abc是否為class的辦法是： issubclass( abc, object ) 或 isinstance( abc, type ) 或 看type( abc )是否為"<class 'type'>"
+# 'issubclass()' can also be named 'isdescendentclass()'
+
+5. 任何class (包括object與type這兩個class)都有immediate super class(es)  # object與type的immediate super class是object
+6. 只要是個class object，我們就可以使用這個class object來explicitly new出一個(屬於)此class的instance (e.g., a = int() ) 
+
+   或者說：只要一個object是type這個class的instance，那這個object就是一個type、而我們可以用這個type來產生一個「(屬於)此type的instance」<---- PYTHON精華
+
+   type與function這兩個class/type比較囉唆！ 我們不能直接用a = type()或a = function()來產生(屬於)這兩個class(或曰這兩種type)的instance。 
+   但我們可以用type(name, bases, dict, **kwds)來產生(屬於)type「這個class」/「這種type」的instance(或曰class objects)。
+   我們也可以用function(code, globals, name=None, argdefs=None, closure=None)來產生(屬於)function「這個class」/「這種type」的instance。
+
+   當然，Python有提供簡單的「產生type與function這兩個class/type的instances」的辦法，
+   那就是大家所熟悉的「class NAMEHERE( ... ) : ...」與「def NAMEHERE( ... ) : ...」這兩種"便捷寫法"。
+
+   同理，我們也可以用module(name, doc=None)來產生(屬於)module「這個class」/「這種type」的instance(或曰module objects)，
+   只不過大家所熟悉的「import NAMEHERE」等寫法比較"便捷"。
+
+   倒是有一個class名叫builtin_function_or_method，這應是(唯一？)一個「只要是個class，就可以用它來explicitly new出一個(屬於)此class的instance」的例外。
+
+7. 任何user所explicitly new出來的 instance object (只要不是用type(name, bases, dict, **kwds)new的) 都 不是個 type
+
+再註一次： Check一個object abc是否為一個type (object)的辦法是： type( abc )   # 會告訴你abc是否為'type'這個class的instance
+         type( abc )也是check abc為哪個class的instance 的辦法  # 也可以直接看 abc.__class__ 
+
+再註一次： 如果一個object abc是個class object ( issubclass( abc, object )是True # 或： type( abc )或abc.__class__ 是 "<class 'type'>" )
+         我們就可以用abc的__bases__屬性來看它的immediate super classes (或曰base classes)
+         我們也可以用abc的__mro__屬性來看它的super class有哪些 (abc.__mro__是一個tuple ; 其中第一個是abc ; 剩下的是它「所有的ancestor classes」)
+
+「The type of an object」 is a pointer field located in the internal representation of the object (which is a struct)
+
+「The type of an object」= the value of the __class__ attribute of this object
+
+「The type of an object」 df= 「the class that this class object is an instance of」
+
+  ＊ The type of any explicitly created instance-object is the class that was used to create this instance-object.
+
+  ＊ The type of any primitive object (5 or 5.3 or "hi hello" or ...) is a primitive type (int or float or str or ...).
+
+  ＊ The type of any function object is the class named 'function'.
+
+  ＊ The type of any module object is the class named 'module'.
+
+  ＊ The type of all the above-mentioned types is the class named 'type'.  # The type of the class named 'type' is type.
+
+  >>> isinstance( 5, object )       # 5是個object
+  True
+  >>> issubclass( 5, object )       # 5不是個class(-object)
+  Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+  TypeError: issubclass() arg 1 must be a class
+
+  >>> type( 5 )                     # 因此5不是個type (亦即：5的type不是'type')
+  <class 'int'>
+  >>> isinstance( 5, int )          # 它是int(這個class)的instance
+  True
+  >>> isinstance( 5, type )         # 而不是type(這個class)的instance
+  False
+
+  >>> a = 5()                       # 既然5(這個object)不是type(這個class)的instance，我們就不能用5來new出一個(本課程所謂的)instance object
+  <stdin>:1: SyntaxWarning: 'int' object is not callable; perhaps you missed a comma?
+  Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+  TypeError: 'int' object is not callable
+
+  >>> isinstance( int, object )     # int是個object
+  True
+  >>> issubclass( int, object )     # 也是個class(-object)
+  True
+  >>> type( int )                   # 因此是個type (既然是個class)
+  <class 'type'>
+  >>> isinstance( int, type )       # 也就是type(這個class)的instance
+  True
+
+  >>> a = int()                     # 既然int是個type，我們就可以用int來new出一個(本課程所謂的)instance object
+  >>> a
+  0
+
+  >>> issubclass( object, object )  # object是個class
+  True
+  >>> type( object )                # 所以object也是個type
+  <class 'type'>
+  >>> a = object()                  # 所以我們可以用object來new出一個(本課程所謂的)instance object
+  >>> a
+  <object object at 0x7f8220050e30>
+
+  >>> dir(a)
+  ['__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__',   '__init_subclass__', '__le__', '__lt__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__',   '__str__', '__subclasshook__']
+
+  >>> vars(a)                       # 只是這個instance object略有特殊之處(它沒有自己的name space)
+  Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+  TypeError: vars() argument must have __dict__ attribute
+
+  >>> a.b=10                        # 而我們當然也就不能在它的name space之中加入新的屬性
+  Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+  AttributeError: 'object' object has no attribute 'b'
+
+  >>> a.__class__                   # 只不過它還是有"衍伸屬性"就是了
+  <class 'object'>
+
+  # 現在我們自己來創造個class(-object)試試看吧...
+
+  >>> class C :
+  ...   pass
+  ... 
+  >>> 
+  >>> isinstance( C, object )       # C是個object
+  True
+  >>> issubclass( C, object )       # 也是個class(-object) (of course)
+  True
+  >>> type( C )                     # 因此是個type (既然是個class)
+  <class 'type'>
+
+  >>> c = C()                       # 所以我們可以用C來new出一個(本課程所謂的)instance object
+
+  >>> type( c )                     # 只是new出來的不會是個type (除非是用type(...)來new)
+  <class '__main__.C'>
+
+  >>> isinstance( c, type )         # 也就是說、用C new出來的不會是type(這個class)的instance
+  False
+  >>> issubclass( c, object )       # 因為用C new出來的不個class(-object)  (只有用type(...)new出來的才會是個class(-object))
+  Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+  TypeError: issubclass() arg 1 must be a class
+
+  >>> isinstance( c, object )       # Just to show "Everything is an object."
+  True
+
+>>> sorted( vars( C ))              # C這個class-object的自有屬性
+['__dict__', '__doc__', '__module__', '__weakref__']
+
+>>> dir( C )                        # C這個class-object的自有屬性+衍伸屬性
+['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__']
+
+>>> C.__bases__                     # C這個(class-)object的所屬class只有一個，就是object這個class (事實上C還有另一個"所屬class"名叫type，這就難解釋了)
+(<class 'object'>,)
+
+>>> sorted( vars( object ))         # 而object這個class的「自有class data/func」就是上面dir(C)的內容 (只是證明C的衍伸屬性是來自其所屬class)
+['__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__']
+
+>>> vars( c )                       # c這個instance object的自有屬性
+{}
+
+>>> dir( c )                        # c這個instance object的自有屬性+衍伸屬性 (可以看出來c的衍伸屬性是來自C、即c的所屬class)
+['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__']
+
+>>> c.hi = 10                       # assign即宣告
+
+>>> sorted( vars( c ) )             # now c has an attribute (an instance data)
+['hi']
+
+>>> dir( c )
+['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'hi']
+
+>>> c.hi = C()                      # let the instance data 'hi' of (the instance object) c point to another instance of C
+
+>>> sorted( vars( c ) )             # the current name space of c
+['hi']
+
+>>> vars( c )                       # the current name space of c, with values of all attributes also shown
+{'hi': <__main__.C object at 0x7fc6500892b0>}
+
+>>> c.hello = c.hi                  # assign即宣告
+
+>>> vars( c )                       # c的current name space ; 注意c.hi與c.hello指向同一個object (another instance of C)
+{'hi': <__main__.C object at 0x7fc6500892b0>, 'hello': <__main__.C object at 0x7fc6500892b0>}
+
+>>> c                               # (just to show that c and c.hi are pointing to different instances of C)
+<__main__.C object at 0x7fc6500898b0>
+
+>>> type( c )
+<class '__main__.C'>
+
+>>> type( c.hello )                 # c與c.hello都是C的instance
+<class '__main__.C'>
+
+>>> vars( c.hello )                 # c.hello的current name space (與c的current name space不一樣)
+{}
+
+>>> del c.hi                        # This only deletes a name ; it does not delete the object that is pointed to by the name
+
+>>> vars( c )                       # The (C-)object originally pointed at by c.hi is still there
+{'hello': <__main__.C object at 0x7fc6500892b0>}
+
+-------
+
+>>> isinstance( C, type )           # 事實上C還有一個隱藏版的"所屬class"名叫type
+True
+>>> isinstance( object, type )      # 所有的class(-objects)都是type這個class(-object)的instance，包括object這個"top-level class"
+True
+
+>>> isinstance( type, object )      # type是個object (of course (since everything is an object))
+True
+>>> issubclass( type, object )      # 也是個class(-object)
+True
+>>> type.__bases__                  # 它(type)的所屬class是object
+(<class 'object'>,)
+
+>>> sorted( vars( type ) )          # 身為一個class，type有它的的自有屬性(自有的class data/func)
+['__abstractmethods__', '__base__', '__bases__', '__basicsize__', '__call__', '__delattr__', '__dict__', '__dictoffset__', '__dir__', '__doc__', '__flags__', '__getattribute__', '__init__', '__instancecheck__', '__itemsize__', '__module__', '__mro__', '__name__', '__new__', '__prepare__', '__qualname__', '__repr__', '__setattr__', '__sizeof__', '__subclasscheck__', '__subclasses__', '__text_signature__', '__weakrefoffset__', 'mro']
+
+# 既然C是type這個class的instance，C的衍伸屬性就(根據Python規矩)包括所有的「type這個class的class data/func」
+
+>>> C.__base__                      # 比如說__base__這個data屬性
+<class 'object'>
+>>> C.mro()                         # 或是mro()這個function屬性
+[<class '__main__.C'>, <class 'object'>]
+>>> C.__mro__                       # 或是__mro__這個data屬性
+(<class '__main__.C'>, <class 'object'>)
+
+# 請注意dir(C)之中並未列出C的這些"隱藏版的衍伸屬性"！ 原因很簡單：如果dir(C)有、dir(c)就必須有！
+
+>>> dir( C )
+['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__']
+
+# 但c、身為一個「非class」的object、並沒有這些"隱藏版的衍伸屬性"
+
+>>> c.__base__                      # 比如說c並沒有__base__這個data屬性
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: 'C' object has no attribute '__base__'
+
+>>> c.mro()                         # c也沒有mro()這個function屬性
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: 'C' object has no attribute 'mro'
+
+>>> isinstance( c, type )           # 因為c並不是type的instance
+False
+>>> issubclass( c, object )         # 而「c不是type的instance」的原因是：c並不是個class(-object)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: issubclass() arg 1 must be a class
+
+# 既然c不是type的instance，c的衍伸屬性當然就不包括type的class data/func、而dir(c)之中也不能出現type的class data/func。
+# 既然dir(c)之中不能出現type的class data/func，dir(C)之中就不能出現type的class data/func，
+# 也就是說，type的class data/func必須是C"隱藏版的衍伸屬性"。
+
+###################################################
+
+# 至於type這個class(-object)的自有屬性與衍伸屬性
+
+>>> sorted( vars( type ))             # type的自有屬性
+['__abstractmethods__', '__base__', '__bases__', '__basicsize__', '__call__', '__delattr__', '__dict__', '__dictoffset__', '__dir__', '__doc__', '__flags__', '__getattribute__', '__init__', '__instancecheck__', '__itemsize__', '__module__', '__mro__', '__name__', '__new__', '__prepare__', '__qualname__', '__repr__', '__setattr__', '__sizeof__', '__subclasscheck__', '__subclasses__', '__text_signature__', '__weakrefoffset__', 'mro']
+
+>>> isinstance( type, type )          # type這個object的"所屬class"是type (而type這個class自有的class data/func.就是「type這個object的自有屬性」)
+True
+
+>>> type.__mro__                      # 而type這個class也只有object這麼一個(immediate) super class
+(<class 'type'>, <class 'object'>)
+>>> type.__bases__
+(<class 'object'>,)
+
+>>> sorted( vars( object ))           # object這個class的自有屬性 (object這個class的衍伸屬性就不提了；object是type的instance，所以其衍伸屬性是來自type)
+['__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__']
+
+>>> dir( type )                       # 所以，type這個class-object的自有屬性+衍伸屬性
+['__abstractmethods__', '__base__', '__bases__', '__basicsize__', '__call__', '__class__', '__delattr__', '__dict__', '__dictoffset__', '__dir__', '__doc__', '__eq__', '__flags__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__instancecheck__', '__itemsize__', '__le__', '__lt__', '__module__', '__mro__', '__name__', '__ne__', '__new__', '__prepare__', '__qualname__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasscheck__', '__subclasses__', '__subclasshook__', '__text_signature__', '__weakrefoffset__', 'mro']
+
+# 相對於sorted( vars( type ))，dir( type ) 多了 '__class__', '__eq__', '__format__', '__ge__', '__gt__', '__hash__', '__init_subclass__', '__le__', '__lt__', '__ne__', '__reduce__', '__reduce_ex__', '__str__'與'__subclasshook__'這些衍伸屬性  
+# 這些衍伸屬性都是來自object這個class。
+
+-------------------------------------------------------------------------------
+
+# 有哪些built-in function/data可用？
+
+>>> sorted( vars() )
+['A', 'C', 'D', '__annotations__', '__builtins__', '__doc__', '__loader__', '__name__', '__package__', '__spec__', 'a', 'c']
+
+>>> dir( __builtins__ )
+['ArithmeticError', 'AssertionError', 'AttributeError', 'BaseException', 'BlockingIOError', 'BrokenPipeError', 'BufferError', 'BytesWarning', 'ChildProcessError', 'ConnectionAbortedError', 'ConnectionError', 'ConnectionRefusedError', 'ConnectionResetError', 'DeprecationWarning', 'EOFError', 'Ellipsis', 'EnvironmentError', 'Exception', 'False', 'FileExistsError', 'FileNotFoundError', 'FloatingPointError', 'FutureWarning', 'GeneratorExit', 'IOError', 'ImportError', 'ImportWarning', 'IndentationError', 'IndexError', 'InterruptedError', 'IsADirectoryError', 'KeyError', 'KeyboardInterrupt', 'LookupError', 'MemoryError', 'ModuleNotFoundError', 'NameError', 'None', 'NotADirectoryError', 'NotImplemented', 'NotImplementedError', 'OSError', 'OverflowError', 'PendingDeprecationWarning', 'PermissionError', 'ProcessLookupError', 'RecursionError', 'ReferenceError', 'ResourceWarning', 'RuntimeError', 'RuntimeWarning', 'StopAsyncIteration', 'StopIteration', 'SyntaxError', 'SyntaxWarning', 'SystemError', 'SystemExit', 'TabError', 'TimeoutError', 'True', 'TypeError', 'UnboundLocalError', 'UnicodeDecodeError', 'UnicodeEncodeError', 'UnicodeError', 'UnicodeTranslateError', 'UnicodeWarning', 'UserWarning', 'ValueError', 'Warning', 'ZeroDivisionError',
+ 
+'_', '__build_class__', '__debug__', '__doc__', '__import__', '__loader__', '__name__', '__package__', '__spec__', 
+
+'abs', 'all', 'any', 'ascii', 'bin', 'bool', 'breakpoint', 'bytearray', 'bytes', 'callable', 'chr', 'classmethod', 'compile', 'complex', 'copyright', 'credits', 'delattr', 'dict', 'dir', 'divmod', 'enumerate', 'eval', 'exec', 'exit', 'filter', 'float', 'format', 'frozenset', 'getattr', 'globals', 'hasattr', 'hash', 'help', 'hex', 'id', 'input', 'int', 'isinstance', 'issubclass', 'iter', 'len', 'license', 'list', 'locals', 'map', 'max', 'memoryview', 'min', 'next', 'object', 'oct', 'open', 'ord', 'pow', 'print', 'property', 'quit', 'range', 'repr', 'reversed', 'round', 'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str', 'sum', 'super', 'tuple', 'type', 'vars', 'zip']
+
+# 若要知道任何function (包括所有的built-in function)怎麼用，just use 'help()'
+
+>>> help( abs )
+
+abs(x, /)
+    Return the absolute value of the argument.
+
+---
+
+# 另一個知道有哪些built-in function/data可用的辦法(條條大路通羅馬)
+
+>>> dir( sys )
+['__breakpointhook__', '__displayhook__', '__doc__', '__excepthook__', '__interactivehook__', '__loader__', '__name__', '__package__', '__spec__', '__stderr__', '__stdin__', '__stdout__', '__unraisablehook__', '_base_executable', '_clear_type_cache', '_current_frames', '_debugmallocstats', '_framework', '_getframe', '_git', '_home', '_xoptions', 'abiflags', 'addaudithook', 'api_version', 'argv', 'audit', 'base_exec_prefix', 'base_prefix', 'breakpointhook', 'builtin_module_names', 'byteorder', 'call_tracing', 'copyright', 'displayhook', 'dont_write_bytecode', 'exc_info', 'excepthook', 'exec_prefix', 'executable', 'exit', 'flags', 'float_info', 'float_repr_style', 'get_asyncgen_hooks', 'get_coroutine_origin_tracking_depth', 'getallocatedblocks', 'getdefaultencoding', 'getdlopenflags', 'getfilesystemencodeerrors', 'getfilesystemencoding', 'getprofile', 'getrecursionlimit', 'getrefcount', 'getsizeof', 'getswitchinterval', 'gettrace', 'hash_info', 'hexversion', 'implementation', 'int_info', 'intern', 'is_finalizing', 'last_traceback', 'last_type', 'last_value', 'maxsize', 'maxunicode', 'meta_path', 'modules', 'path', 'path_hooks', 'path_importer_cache', 'platform', 'platlibdir', 'prefix', 'ps1', 'ps2', 'pycache_prefix', 'set_asyncgen_hooks', 'set_coroutine_origin_tracking_depth', 'setdlopenflags', 'setprofile', 'setrecursionlimit', 'setswitchinterval', 'settrace', 'stderr', 'stdin', 'stdout', 'thread_info', 'unraisablehook', 'version', 'version_info', 'warnoptions']
+
+>>> sys.builtin_module_names
+('_abc', '_ast', '_codecs', '_collections', '_functools', '_imp', '_io', '_locale', '_operator', '_peg_parser', '_signal', '_sre', '_stat', '_string', '_symtable', '_thread', '_tracemalloc', '_warnings', '_weakref', 'atexit', 'builtins', 'errno', 'faulthandler', 'gc', 'itertools', 'marshal', 'posix', 'pwd', 'sys', 'time', 'xxsubtype')
+ 
+>>> import builtins
+
+>>> dir( builtins )
+['ArithmeticError', 'AssertionError', 'AttributeError', 'BaseException', 'BlockingIOError', 'BrokenPipeError', 'BufferError', 'BytesWarning', 'ChildProcessError', 'ConnectionAbortedError', 'ConnectionError', 'ConnectionRefusedError', 'ConnectionResetError', 'DeprecationWarning', 'EOFError', 'Ellipsis', 'EnvironmentError', 'Exception', 'False', 'FileExistsError', 'FileNotFoundError', 'FloatingPointError', 'FutureWarning', 'GeneratorExit', 'IOError', 'ImportError', 'ImportWarning', 'IndentationError', 'IndexError', 'InterruptedError', 'IsADirectoryError', 'KeyError', 'KeyboardInterrupt', 'LookupError', 'MemoryError', 'ModuleNotFoundError', 'NameError', 'None', 'NotADirectoryError', 'NotImplemented', 'NotImplementedError', 'OSError', 'OverflowError', 'PendingDeprecationWarning', 'PermissionError', 'ProcessLookupError', 'RecursionError', 'ReferenceError', 'ResourceWarning', 'RuntimeError', 'RuntimeWarning', 'StopAsyncIteration', 'StopIteration', 'SyntaxError', 'SyntaxWarning', 'SystemError', 'SystemExit', 'TabError', 'TimeoutError', 'True', 'TypeError', 'UnboundLocalError', 'UnicodeDecodeError', 'UnicodeEncodeError', 'UnicodeError', 'UnicodeTranslateError', 'UnicodeWarning', 'UserWarning', 'ValueError', 'Warning', 'ZeroDivisionError', 
+
+'_', '__build_class__', '__debug__', '__doc__', '__import__', '__loader__', '__name__', '__package__', '__spec__', 
+
+'abs', 'all', 'any', 'ascii', 'bin', 'bool', 'breakpoint', 'bytearray', 'bytes', 'callable', 'chr', 'classmethod', 'compile', 'complex', 'copyright', 'credits', 'delattr', 'dict', 'dir', 'divmod', 'enumerate', 'eval', 'exec', 'exit', 'filter', 'float', 'format', 'frozenset', 'getattr', 'globals', 'hasattr', 'hash', 'help', 'hex', 'id', 'input', 'int', 'isinstance', 'issubclass', 'iter', 'len', 'license', 'list', 'locals', 'map', 'max', 'memoryview', 'min', 'next', 'object', 'oct', 'open', 'ord', 'pow', 'print', 'property', 'quit', 'range', 'repr', 'reversed', 'round', 'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str', 'sum', 'super', 'tuple', 'type', 'vars', 'zip']
+
+-------------------------------------------------------------------------------
+
+vars() 與 dir()
+  是針對object 
+  vars()是列出object的"自有屬性"(以及其值)，dir()是列出object的"自有屬性"+"衍伸屬性"(即所屬class與所有ancestor classes的class data/func)
+
+# vars( obj )會列出attributes的值，且未排序，所以我們使用sorted( vars( obj ) )來show；locals()與globals()也是同樣道理
+
+locals() 與 globals()          
+  是針對目前的activation record(目前正在執行的這個function)                    # Python對locals()的設計與我們預期的locals()不太一樣
+  locals()是列出目前正在執行的這個function本身 截至目前為止已存在的 local names   # 我們預期的locals()只有這一部分
+               與 
+               這個function有「legally宣告為nonlocal」、且截至目前為止已存在的 local names (不需要有reference或update的程式碼)
+               與 
+               這個function只有reference它的程式碼、且截至目前為止已存在的 local names
+               與 
+              「被子孫functions所legally宣告為nonlocal、但不屬於此function、且截至目前為止已存在」的local names (不需要有reference或update的程式碼)
+               與 
+              「子孫functions只有reference它的程式碼、但不屬於此function、且截至目前為止已存在」的local names 
+  globals()是列出目前正在執行的這個function「所屬的module-obj」截至目前為止已存在的instance data/function
+
+-------------------------------------------------------------------------------
+
+zzz = yyy = 500
+
+# F()包含G()，G()包含H() ; F()呼叫G()，G()沒呼叫H() ; 
+# G()在執行時有兩次print( locals() )，剛開始時與快結束時。
+
+def F() :
+  a = 10               # a被H()宣告為nonlocal，也有update與reference它
+  a1 = 11 ; a2 = 12    # a2被H()reference(而已)，注意a1沒人理。
+  a3 = 13              # G()只是有reference a3的statement而已、同時也根本就不會去reference它
+  x = 15               # x被G()宣告為nonlocal、但沒碰它
+  def G() :
+    print( "Locals of G() at the very start : ", locals() ) ; print()   # G()在一開始時的locals()
+    nonlocal x, x1
+    b = 20
+    y = 21             # y被H()宣告為nonlocal、但H()沒碰它；而y是從現在開始才存在
+    def H() :
+      print( "Locals of H() at the very start : ", locals() ) ; print()
+      global zzz, yyy
+      zzz = 100
+      c = 30
+      nonlocal a, y, x2
+      a = 3 * a
+      print( "Locals of H() at the end: ", locals() )
+      print( "Value of 'a2' :", a2 ) ; print()
+      # END-H()
+    # H()               # 注意G()根本就沒呼叫H()！
+    print( "Locals of G() after 宣告完b、y、H() : ", locals() ) ; print() # G()後來的locals()
+    if False :
+      nonsense = a3 + a4 + 10
+    # END - G()
+  print( "Locals of F() before calling G() : ", locals() ) ; print()
+  G()
+  a4 = 14               # G()只是有reference a4的statement而已、同時也根本就不會去reference它
+  x1 = 123              # x1有被G()宣告為nonlocal、但x1是從現在開始才存在
+  x2 = 456              # x2也有被H()宣告為nonlocal、但x2是從現在開始才存在
+  print( "Locals of F() in the end : ", locals() ) ; print()
+
+F()
+
+>>> F()
+Locals of F() before calling G() :  {'a1': 11, 'G': <function F.<locals>.G at 0x7fc6502394c0>, 'a': 10, 'a2': 12, 'a3': 13, 'x': 15}
+
+Locals of G() at the very start :  {'a': 10, 'a2': 12, 'a3': 13, 'x': 15}
+
+Locals of G() after 宣告完b、y、H() :  {'a': 10, 'a2': 12, 'a3': 13, 'x': 15, 'b': 20, 'H': <function F.<locals>.G.<locals>.H at 0x7fc650239550>, 'y': 21}
+
+Locals of F() in the end :  {'a1': 11, 'G': <function F.<locals>.G at 0x7fc6502394c0>, 'a': 10, 'a2': 12, 'a3': 13, 'x': 15, 'a4': 14, 'x1': 123, 'x2': 456}
+
+-------------------------------------------------------------------------------
+
+                             Logical consequences of "everything is an object" 
+
+>>> Class1AnotherName = Class1
+>>> objet123 = Class1AnotherName()
+>>> Func1AnotherName = Func1
+>>> Func1AnotherName( 5, 10 )
+>>> PassAndUse( Class1, Func1, 5, 10 )    # Use 'Class1' to create an instance and call 'Func1'
+>>> PassAndUse( Class2, Func2, 50, 100 )  # Use 'Class2' to create an instance and call 'Func2'
+
+# A short comment on the so-called polymorphism (when the language in question is Python)
+
+-------------------------------------------------------------------------------
+
+# Why is it the case that type-casts become "creations of new objects" in Python? 
+# What is the underlying philosophy here?
+
+>>> list( (1,2,3) )
+[1, 2, 3]
+>>> tuple( [1,2,3] )
+(1, 2, 3)
+>>> list( { 1:'a', 2:'b', 3:'c' } )
+[1, 2, 3]
+>>> tuple( { 1:'a', 2:'b', 3:'c' } )
+(1, 2, 3)
+
+>>> list.__call__( (1,2,3) )
+[1, 2, 3]
+>>> tuple.__call__( (1,2,3) )
+(1, 2, 3)
+
+For Python, the reason that we can call a Python-function is not because "this is the very concept of functions."
+
+The reason why we are able to call (in a computational sense, and not in a mathematical sense) a Python-function is because, in Python, a function-object is 「Python-callable」.
+
+What do we mean by "a callable object" in Python?
+
+A SOMETHING is (Python-)callable if we can write a command (a statement or an expression) as >>SOMETHING(...)<< and then "execute" this command, causing some corresponding piece of Python code to be executed (by the Python interpreter).
+
+We can always use the builtin function 'callable()' to check the "callability" of SOMETHING, e.g., >>callable( SOMETHING )<<.
+
+>>> class G :
+...   def __call__( self, a ) :
+...     print( "G instance called with parameter 'a' being", a )
+... 
+>>>
+
+>>> g = G()
+
+>>> g(100)
+G instance called with parameter 'a' being 100
+
+# How about G()? It seems that G is a "callable object"...
+
+# 來一個"minimal class"吧
+
+>>> class A :
+...   pass
+... 
+>>> 
+
+>>> sorted( vars( A ) )
+['__dict__', '__doc__', '__module__', '__weakref__']
+
+>>> dir( A )
+['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__']
+
+# dir(A)之中沒有__call__耶！！！
+
+>>> callable( A )
+True                                    # 所以A是"callable" ; 而所謂callable的意思就是...
+
+>>> A.__call__()
+<__main__.A object at 0x7f96a824ab80>   # A這個class object的確有一個function-attr.名為'__call__' 
+
+>>> A()                                 # 而A()事實上會被系統翻譯為A.__call__() ; 因此，A.__call__()與A()同樣都是產生一個「A的instance object」
+<__main__.A object at 0x7f96a81ab880>
+
+>>> A.__mro__                           # A甚至還有這個屬性，記錄了它這個class以及它所有的super classes
+(<class '__main__.A'>, <class 'object'>)
+
+# 但dir(A)之中並沒有__call__、__mro__啊！！！ 所以A這個object的__call__屬性與__mro__屬性是從哪裏冒出來的？？？
+
+>>> A.__base__     # 這是A的immediate super class嗎 ?
+<class 'object'>
+
+>>> A.mro()
+[<class '__main__.A'>, <class 'object'>]
+
+# 所以，A.__base__的值到底是不是A的immediate super class？
+
+>>> class X :
+...   pass
+... 
+>>> 
+>>> class B( A ) :
+...   pass
+... 
+>>> class C( B, X ) :
+...   pass
+... 
+>>> 
+>>> C.__class__
+<class 'type'>
+
+>>> C.__mro__
+(<class '__main__.C'>, <class '__main__.B'>, <class '__main__.A'>, <class '__main__.X'>, <class 'object'>)
+
+>>> C.__base__
+<class '__main__.B'>                         # 不對！C的immediate super class應該有兩個才對！
+
+>>> C.__bases__
+(<class '__main__.B'>, <class '__main__.X'>) # 這才是C的immediate super classes！
+>>> 
+>>> B.__bases__
+(<class '__main__.A'>,)                      # 所以一個class的immediate super class (所謂的base classes)要check這個才對！
+
+>>> help( type.mro )
+mro(self, /)
+    Return a type's method resolution order.
+(END)
+
+>>> type.mro( C )
+[<class '__main__.C'>, <class '__main__.B'>, <class '__main__.A'>, <class '__main__.X'>, <class 'object'>]
+
+-------------------------------------------------------------------------------
+
+             Function annotation and variable annotations (basically just a kind of comments)
+
+>>> def sum_two_numbers( a : int, b : int ) -> int :
+...   return a + b
+... 
+>>> sum_two_numbers( 20.5, 18.7 )
+39.2
+>>> sum_two_numbers( 'Hi!', 'How are you!' )
+'Hi!How are you!'
+
+>>> count : int = 0
+>>> count = 'Hi! Hello!'
+>>> count
+Hi! Hello!
+
+-------------------------------------------------------------------------------
+
+                           Parameter Passing
+
+####### How to memorize - THE FINAL COUNT - written on 2023-11-01, revised on 2023-11-21 #######
+
+Arguments of a function call
+
+  positional
+  keyword
+
+  Rule : Keyworded arguments can only go behind positional arguments (no exception)
+
+Parameters of a function definition
+
+  no-default
+  with default
+
+  /                       # meaning : if there is an argument corresponding to a parameter preceding '/', that argument must be positional
+  *                       # meaning : if there is an argument corresponding to a parameter behind '*', that argument must be keyworded
+
+  *aTuple                 # recall the game PacMan ('aTuple' will "eat up" all the remaining positional arguments)
+  **aDict                 # recall the game PacMan ('aDict' will "eat up" all the remaining keyworded argumebts)
+
+  Rule : A defaulted parameter can only go behind parameters without defaults UNLESS this parameter is behind '*'
+
+  Rule : '**aDict' can only be the last one in the parameter list (of the being defined function)
+
+>>> def F( a=10, b=20, *Tuple, c=30, d ) :
+...   print( a, b, aTuple, c, d )
+... 
+>>> 
+>>> F( 100, 200, 300, 400, 500, 600, d = 700 )
+100 200 (300, 400, 500, 600) 30 700
+
+####### END - How to memorize - THE FINAL COUNT - written on 2023-11-01, revised on 2023-11-21 #######
+
+# '*' can also appear on the left hand side of an assignment symbol ('='). Just think of an assignment as a function call！！！
+
+>>> first, second = (10, 20)
+>>> first
+10
+>>> second
+20
+
+>>> first, *rest = (10, 20, 30, 40)
+>>> first
+10
+>>> rest
+[20, 30, 40]
+
+>>> *firstOnes, last = (10, 20, 30, 40)
+>>> firstOnes
+[10, 20, 30]
+>>> last
+40
+
+>>> car, *cdr = ( (1, 2), 3, (4, 5) )
+>>> car
+(1, 2)
+>>> cdr
+[3, (4, 5)]
+
+>>> a, b, *c, d = range( 20 )   # just replace 'range(20)' with any iterable
+>>> a
+0
+>>> b
+1
+>>> c
+[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+>>>
+>>> d
+19
+
+# An application of the use of the unpacking operator ('*') on the left hand side of an assignment statement
+
+>>> sentence = "This will be the start of a beautiful friendship."
+
+>>> sentence.split(" ")
+['This', 'will', 'be', 'the', 'start', 'of', 'a', 'beautiful', 'friendship.']
+
+>>> sentence.split(" ", maxsplit = 3)
+['This', 'will', 'be', 'the start of a beautiful friendship.']
+
+>>> *firstOnes, last = sentence.split(" ", 3)
+
+>>> firstOnes
+['This', 'will', 'be']
+
+>>> last
+'the start of a beautiful friendship.'
+
+#####
+
+# '*' is the "unpacking" operator for iterables (e.g., tuple/list/the-list-of-keys-of-a-dictionary) ;
+# '**' is the unpacking operator for dictionaries ; used either for redefining a new dictionary or for passing a list of keyword arguments
+# 
+# That is, '*a' means "a unpacked" and '**d' means "d (normally a dictionary) unpacked"
+# '*a' and '**d' are used for passing a list of (the unpacked) things as arguments when calling a function, including defining a new list/tuple/dictionary.
+
+>>> y
+(3, 30)
+
+>>> print( y )
+(3, 30)
+
+>>> print( *y )     # = print( y[0], y[1] )
+3 30
+
+>>> d = { 'k1':10, 'k2':20, 'k3':30 }
+
+>>> def F( k1, k2, k3 ) :
+...   print( type( k1 ) )
+...   print( k1, k2, k3 )
+... 
+>>>
+
+>>> F( **d )        # = F( k1 = 10, k2 = 20, k3 = 30 )
+<class 'int'>
+10 20 30
+
+>>> F( *d )         # = F( 'k1', 'k2', 'k3' )
+<class 'str'>
+k1 k2 k3
+
+>>> ( *d, )         # = ( 'k1', 'k2', 'k3' )
+('k1', 'k2', 'k3')
+
+>>> [ *d ]          # = [ 'k1', 'k2', 'k3' ]
+['k1', 'k2', 'k3']
+
+>>> { *d }          # the specification of a set
+{'k2', 'k3', 'k1'}
+
+>>> type( { *d } )
+<class 'set'>
+
+>>> { **d }         # = dict( k1 = 10, k2 = 20, k3 = 30 )  # OR implicitly deciding to use ':' instead of '=' upon seeing the enclosing '{' and '}'？？？
+{'k1': 10, 'k2': 20, 'k3': 30}
+
+>>> print( *d )     # = print( 'k1', 'k2', 'k3' )
+k1 k2 k3
+
+>>> print( **d )    # = print( k1 = 10, k2 = 20, k3 = 30 )
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: 'k1' is an invalid keyword argument for print()
+
+>>> players = { 2 : 'Chang San', 3 : 'Lee Four' }
+>>> players
+{2: 'Chang San', 3: 'Lee Four'}
+
+>>> more_players = { 4 : 'Wang Wu', 2 : 'Lee Who' }
+>>> more_players
+{4: 'Wang Wu', 2: 'Lee Who'}
+
+>>> team = { **more_players, **players, 5 : 'Liu Seven' }
+>>> team
+{4: 'Wang Wu', 2: 'Chang San', 3: 'Lee Four', 5: 'Liu Seven'}
+
+-------------------------------------------------------------------------------
+
+       local var. (and local func.) vs. global var. (and global func.)
+
+所謂的"global var.與global func." 
+事實上是 
+the instance var. and instance func. of the module object within which the declaration of this being executed function is located
+
+(只是如果真要這樣說的話、要把一切東西完整解釋清楚就非常非常困難了。所以還是用"global var."的概念來解釋這一切吧...)
+
+####### Final Summary written on 2023-10-31, revised on 2023-11-17 #######
+
+Note : 
+  Below, when we write 'local var.', we mean either a genuine var or a fake local var.
+
+genuine var. x 
+  df= there is an assignment stmt in F() that assigns to x and there is no corresponding 'global'/'nonlocal' declaration of x in F()
+
+fake local var. x 
+  df= there is a legal 'nonlocal' declaration of x in F()
+
+A 'nonlocal' declaration of x (in a function F()) is legal
+  if
+  x is a local var. of some nearest ancestor function of F()
+
+Parent function and child function :
+
+  If the definition of F() includes the definition of G(), 
+    then F() is the parent function of G() and G() is a child function of F().
+
+Ancestor function and descendent function :
+
+  If F() is the parent function of G(), 
+    then F() is an ancestor function of G() and G() is a descendent function of F().
+
+  If F() is an ancestor function of G() and G() is an ancestor function of H(),
+    then F() is an ancestor function of H() and H() is a descendent function of F().
+
+Rule : a 'global'/'nonlocal' declaration of x in F() must appear ABOVE any statement/expression of F() in which x appears.
+
+Implicit rule : a variable cannot be declared to be both 'global' and 'nonlocal' in the same function.
+
+-----------
+
+Global var, nonlocal var, 'global', and 'nonlocal'
+
+1. A global var. x can be referenced (including x.F()) anywhere.  # referenced df= appears without being assigned ('=')
+   # Case in point : no 'global x' is needed in order for a function to reference a global variable x (assuming that the object named by 'x' already exists in the execution environment when this object is to be referenced by the system via 'x').
+
+2. A function F() can always reference a local var. x of some NEAREST ancestor function (note : the concept of referencing includes x.F()).
+   # Case in point : no 'nonlocal x' is needed in order for a function to reference a local variable x of its nearest ancestor function (assuming that the object named by 'x' already exists in the execution environment when this object is to be referenced by the system via 'x').
+
+3. Whenever there is an assignment to a variable x in F(), then
+
+   case I : there is no corresponding 'nonlocal'/'global' declaration of x in F() (ABOVE this assignment)
+            
+     x is a (re-)declaration of a (genuine) local variable of F().
+
+   case II : there is a corresponding 'global' delaration of x in F() (ABOVE this assignment)
+
+     x is a (re-)declaration of a global variable.
+     # Case in point : the object named by 'x' does not have to exist in the execution environment before this assignment to x is executed.
+
+   case III : there is a corresponding 'nonlocal' delaration of x in F() (ABOVE this assignment)
+
+     x is a (re-)declaration of a local variable of the nearest ancestor function.
+     # Case in point : the object named by 'x' does not have to exist in the execution environment before this assignment to x is executed.
+
+Here is a recap of how the system determines whether a var. x is a local var. of F() :
+
+A variable x is considered a local var. of F() 
+
+IFF
+     there is an assignment to x ANYWHERE within F() (disregarding whether this assignment is within nested conditionals/loops)
+     AND
+     there is no 'global'/'nonlocal' declaration of x ABOVE all references/updates to x (within F()).
+  OR
+     there is a legal 'nonlocal' declaration of x within F() 
+
+！！！ It is possible that 「a local var. (of a function F) does not already exist at some point when F() is being executed」 ！！！
+      (i.e., 有可能「在F()的執行過程之中、起碼到某一點為止、F()的某個區域變數x並不存在」，此狀況即使是fake local var. of F()也一樣成立)
+
+「x is a local var. of F()」 是個文法上的概念(a syntactical concept) (亦即、這是用「文法檢查」所決定的)  # 「x 是不是 F() 的區域變數」 是個 「文法上的概念」
+
+「whether the local var. x of F() exists or not」is a run-time concept   # 「系統在run的時候到底有沒有x這個東西存在於系統之中」 是個 「執行上的概念」 
+ # (在F()執行的過程之中)執行print( locals() )就知道「目前whether the local var. x of F() exists or not」 # 「existence of x」is a run-time concept
+
+BTW :
+
+  每次我們要reference一個x的值時、系統怎麼知道"x unbound"？ 
+
+  The "variable search process" :
+  
+    from the enclosing function (its local names), to the nearest enclosing function (its local names), to the next enclosing function (its   local names), etc., to the current module's global names, and finally to the namespace containing the built-in names of the Python   interpreter
+
+  亦即：系統先看(目前這function)的local vars，如果沒有、就看目前這function的parent function的local vars、一層一層找上去、一直找到globals()為止，如果還沒找到、就看是不是個built-in name。如果找到就取其值(嚴格來說是「retrieve所point to的object」)，找不到就"x unbound"。
+
+  # 在概念上，應是先看locals()所return的結果，如果locals()所return者不含'x'，就看globals()所return的結果，如果globals()所return者不含'x'，就看built-in names；找到了、就OK，找不到、就看是update還是reference，如果是reference，就"x unbound"，如果是update，就把'x'加入目前這個activation record的local var.
+
+--- 註 ---
+
+locals() 與 globals()          
+  是針對目前的activation record(目前正在執行的這個function)                    # Python對locals()的設計與我們預期的locals()不太一樣
+
+  locals()是列出目前正在執行的這個function本身 截至目前為止已存在的 local names   # 我們預期的locals()只有這一部分
+               與 
+               這個function有「legally宣告為nonlocal」、且截至目前為止已存在的 local names (不需要有reference或update的程式碼)
+               與 
+               這個function只有reference它的程式碼、且截至目前為止已存在的 local names
+               與 
+              「被子孫functions所legally宣告為nonlocal、但不屬於此function、且截至目前為止已存在」的local names (不需要有reference或update的程式碼)
+               與 
+              「子孫functions只有reference它的程式碼、但不屬於此function、且截至目前為止已存在」的local names 
+
+  globals()是列出目前正在執行的這個function「所屬的module-obj」截至目前為止已存在的instance data/function
+
+--- END - 註 ---
+
+  # 請注意以下有關locals()的documentation有誤導人的嫌疑：
+
+  >>> help( locals )
+  
+  locals()
+      Return a dictionary containing the current scope's local variables.
+      
+      NOTE: Whether or not updates to this dictionary will affect name lookups in
+      the local scope and vice-versa is *implementation dependent* and not
+      covered by any backwards compatibility guarantees.
+
+  >>> def F() :                # F()的程式碼之中有'x = ...'、而且也沒相關的'global'/'nonlocal'宣告，所以「x是F()的local var」無誤
+  ...   def F1() :
+  ...     nonlocal x
+  ...     print( locals() )    # 第一次被呼叫時locals()所return的dict應該什麼都沒有，因為連F()的x也還都不存在
+  ...     y = 10               # F1()自己的local var y是從現在開始(才)存在
+  ...     print( locals() )    # locals()所return的dict之中有加入y
+  ...   # END - F1()
+  ...   
+  ...   F1()                   # 此時(F()的)x還不存在
+  ...   x = 100                # (F()的)x是從現在才開始存在
+  ...   F1()
+  ...   
+  ...   # END - F()
+  ... 
+  >>> F()
+  {}
+  {'y': 10}
+  {'x': 100}
+  {'x': 100, 'y': 10}
+  >>> 
+  
+  >>> def F() :                # F()的程式碼之中有'x = ...'、而且也沒相關的'global'/'nonlocal'宣告，所以「x是F()的local var」無誤
+  ...   def F1() :
+  ...     nonlocal x, count            # 所以，F1()之中出現的x是某個ancestor function(碰巧是F())的local var
+  ...     count += 1
+  ...     print( 'F1() :', locals() )
+  ...     y = 10
+  ...     print( 'F1() :', locals() )
+  ...     x = 50                       # 請注意F()的local var x是從現在開始(才)存在
+  ...     print( 'F1() :', locals() )
+  ...     if count > 1 :
+  ...       print( 'Printing z in F1() : ', z )  # 可reference到(但不可能update到、除非有作nonlocal宣告) ancestor function的local var
+  ...   # END - F1()
+  ...   
+  ...   count = 0
+  ...   print( 'F() :', locals() )     # 此時count有存在、但x還不存在
+  ...   F1()                           
+  ...   print( 'F() :', locals() )     # x開始存在(但不可能有y這個東西)
+  ...   x = 100
+  ...   print( 'F() :', locals() )
+  ...   z = 200                        # 來一個正宗的(F()的)local var
+  ...   F1()
+  ...   print( 'F() :', locals() )
+  ... 
+  >>> # F() has 3 locals : count, x, and z ; 
+  >>> # F1() has 1 local y and 2 nonlocals : count, x  
+  >>> # z is referenced by F1() but z is neither a local of F1() nor a nonlocal of F1()
+  >>> 
+  >>> F()
+  F() : {'F1': <function F.<locals>.F1 at 0x7ff6f829ef70>, 'count': 0} # 'count' assigned, therefore exists ; note that there is no 'x'
+  F1() : {'count': 1}
+  F1() : {'count': 1, 'y': 10}                    # 'y' assigned, therefore exists
+  F1() : {'count': 1, 'y': 10, 'x': 50}           # 'x' assigned in F1() ; now it exists
+  F() : {'F1': <function F.<locals>.F1 at 0x7ff6f829ef70>, 'count': 1, 'x': 50}   # Back to F(), 'x' now exists
+  F() : {'F1': <function F.<locals>.F1 at 0x7ff6f829ef70>, 'count': 1, 'x': 100}
+  F1() : {'count': 2, 'x': 100, 'z': 200}   # Note that 'z' is neither a local of F1() nor a nonlocal of F1() ; but is in locals() of F1()
+  F1() : {'count': 2, 'x': 100, 'z': 200, 'y': 10}
+  F1() : {'count': 2, 'x': 50, 'z': 200, 'y': 10}
+  Printing z in F1() :  200                 # Just to show that 'z' of F() can be referenced in F1() ; also note that it is in locals() here
+  F() : {'F1': <function F.<locals>.F1 at 0x7ff6f829ef70>, 'count': 2, 'x': 50, 'z': 200}
+  >>> 
+
+####### END - Final Summary written on 2023-10-31, revised on 2023-11-17 #######
+
+-------------------------------------------------------------------------------
+
+                 Python OOP - the languague part
+
+1. Python只有public的概念, 沒有private 或 protected的概念 ＃ 可能是與沒有explicit declaration有關
+
+# 完全要靠naming convention 與 自我約束 來做到  private、protected、public  與  static、non-static (如果有此方面的考量的話)
+
+# Q：private、protected、public  與  static、non-static 各是什麼樣的概念？
+
+2. module (=file) 之中的 '_varName'（底線開頭。至於varName本身是否有底線開頭與底線結尾已與右方所述之module import規矩不相關）當 from module123 import * 時、不會被import進來。However, we can always use 'import Module123' and 'Module123._varName' to access such variables/module-attributes。 只是說、我們在一般程式碼中不該去存或取這些變數或呼叫這些functions.   # 因為這是module-static的概念！
+
+3. class之中的class data (與class function)的名字如果是如 '_dataMember123'（即單底線開頭）者、那只是「希望能比照」一般OOP的'protected'的概念，與系統運作無關。這只是在提醒"外人"(＝非descendent-class者)不要去動它。系統並不強制控管此事。
+
+4. 同樣的，class之中的 '__dataMember456'或'＿dataMember789_'（雙底線開頭，頂多一個底線結尾）是「希望能比照」一般OOP的'private'的概念，programmers自己應當要注意不要去動它。系統雖然也是一樣不強制控管此事，但有作name mangling (！！！)。
+
+"Name mangling" 是什麼意思?
+
+e.g., >> from SomeModule import SomeClass ; anObject = SomeClass() <<  之後， 原先應是
+         anObject.__dataMember456
+         或anObject.__dataMember789_
+         或anObject.__memberFunction789()
+         或anObject.__memberFunction999_()的，
+         現在改名為
+         anObject._SomeClass__dataMember456
+         或anObject._SomeClass__dataMember789_
+         或anObject._SomeClass__memberFunction789()
+         或anObject._SomeClass__memberFunction999_()。
+
+5. 至於'__dataMember999__'與'__memberFunction888__()'（既雙底線開頭又雙底線結尾的名字-不管是變數名稱還是function/method名稱）這種名字是系統在用的，通常是「可能與系統的運作有關」(e.g., __le__()是系統在執行'<='時會呼叫者)。我們在一般程式碼中  不該使用  這樣的名字。 (但系統並沒有阻止我們用)
+
+---
+       一個method在呼叫「自己或自己家的function」或是access「自己或自己家的變數(data member)」時一定要説   是ClassName.Func123()、還是self.Func123()、還是ClassName.var456、還是self.var456。(不像一般的OOP語言，可以不寫'ClassName'或'this'(='self'))
+
+       唯一的問題是： self.var456有可能是個class data member(如果instance不曾assign過任何值給self.var456的話)，這是「衍伸屬性」的概念，也是一般OOP的作法。
+
+       self.fun456()也有可能是個class member function(Python不接受function overload，所以instance自己不能有同名的function)，這同樣是一般OOP的作法，不過可以因為"the implicit handling of 'self'"而略微得到緩解。
+
+       類似的狀況也可能會在instance method呼叫「自己的function或自己家的function」時發生，但此部分已因「Python不接受function overload、而又要求必須在呼叫時寫清楚是ClassName.Func123()還是self.Func123()」而自動獲得解決。
+---
+       Class method (class member function)，只要在define method時  不放  'self' 這個parameter  即可
+       同樣的，instance method (instance member function)，只要在define method時  放  'self' 這個parameter  即可
+       Python不接受function overload(即不同的functions使用同一名字)，所以也不會有Class1.Func123()「既有可能是class method、也有可能是instance method」的問題。
+
+#############################
+
+如何在寫Python script時 實作 private、protected、public  與  static、non-static (如果有此方面的考量的話)  -  該怎麼做？？？
+
+### 一切要靠naming convention 與 寫程式人的良心 ！！！ 系統只提供了聊勝於無的小小幫助(不import '_'開頭者 與 do name mangling for '__'開頭者) ### 
+
+### 既然一切要靠「寫程式的規矩」與「寫程式的人的自我約束」，那「規矩」到底是什麼？ 必須講清楚、說明白。 ###
+
+# Below shows why syntax-restrictions in Python are necessary for different levels of software development.
+  
+Module (=file) 之中不想被別人動的變數或functions   # module-static
+
+  '_varName' 或 '_FuncName()' 或 '__varName' 或 '__FuncName()', etc.（底線開頭） 
+
+Class之中不想被「非我族類」(＝非descendent-class者)動的變數或functions   # class-protected
+
+  '_dataMember123' 或 '_FuncName()'（單底線開頭）
+
+Class之中不想被任何「非我家人」(＝非本class者)動的變數或functions   # class-private
+
+  '__dataMember123' 或 '__FuncName()'（雙底線開頭）
+  但注意頂多只能一個底線結尾。
+
+除非是自己的"自製系統"要用到，否則不准使用雙底線開頭又雙底線結尾的變數名稱或function/method名稱(e.g., __var123__ 與 __Func567__() )。
+
+Static local variables (of a function/method)
+
+  名稱必須是 __funcName_varName(如果是module的話) 或 __methodName_varName___(如果是class的話)
+  +
+  此 __funcName_varName(如果是module的話) 或 __methodName_varName___(如果是class的話) 必須 事先 有在module/class中宣告(= assign)
+
+Class static method (即class member function)
+
+  在define method時  不放  'self'這個parameter # Python系統有支援此做法
+
+Class static data member (即class data member) ： 
+
+  將此class data member宣告(=assign)為  __dataMember123___  (雙底線開頭、三底線結尾)
+  +
+  Never write something like 'self.__varName___ = ...' (in an instance method)
+
+剩下的就只能靠禱告了：祈求寫程式的人能尊重這些不成文的規矩(否則一切完矣...)。  
+
+### 能不reference最好！能不看更好！！但最最起碼也千萬不要update！！！ ###
+
+####### Final Summary written on 2023-11-10, revised on 2023-12-19 #######
+
+              Python OOP - the methodology (方法論) part
+
+---
+
+Python認為：
+
+  Function就是function，不該有"module function", "class function"與"instance function"的區別！
+
+  同理，data (or name)就是data (or name)，不該有"module data", "class data"與"instance data"的區別！
+
+  F()、module1.F()、class1.F()、class1_instance.F()都是同一"種類"的functions，而且Python的functions就那麼一個種類而已、沒有不同的種類。我們只是有不同的「命名規矩」而已，而「命名規矩的不同」並不意味著這些「使用不同命名方式取名字的functions」事實上是不同種類的functions。
+
+  任何function都有一個「所屬module」、此「所屬module」就是「內中有列出此function之定義」的那個檔案。(請注意：「the fictitious top-level」也視同一個"檔案")。
+    --
+    (請注意：「from ModuleABC import *」的意義分兩部分，對ModuleABC的屬性data而言，「from ModuleABC import *」是在run完ModuleABC之中的程式碼之後、先是在目前所屬module之中重新create同名字的屬性data、然後再將「ModuleABC之中的x之值」copy成為「『目前所屬module』之中的x之值」，而這是個pointer assignmenbt。 那ModuleABC的屬性function怎麼辦？對ModuleABC的屬性function而言，「from ModuleABC import *」只是create aliases而已；也就是說、以ModuleABC之中的function F()為例、雖然看似「目前所屬module」來了這麼一個function F()，但事實上這F()依舊是ModuleABC.F()、而並不真的是「『目前所屬module』的(新的)『屬性function』F()」，只是說、我們在呼叫ModuleABC.F()之時只要寫「F()」就可以了；重點：在「from ModuleABC import *」或「from ModuleABC import F」之後，ModuleABC原有的F()並沒有真的成為「目前所屬module」的屬性function，它(F())依舊是ModuleABC的屬性function；但屬性data的部分就不一樣了，在「from ModuleABC import *」之後，ModuleABC原有的屬性data x (which is a pointer variable)的值會copy成為「新產生的、同名字的、『目前所屬module』的屬性data x」的值)
+    --
+    (一般的建議是「不要寫『from ModuleABC import *』(除非有很好的理由要這樣做)！ 寫『from ModuleABC import F』 或 『import ModuleABC』就好！」。原因有三，一是「覆蓋」、「目前所屬module」原有的屬性function會被同名字的外來aliases所覆蓋掉(這與C/C++/Java的規矩完全相反)，二是若想"update ModuleABC的屬性data"可能會產生confusion、請見下文的(9)，三是「pointer assignment」所導致的後果也是很容易產生confusion（"「新產生的、同名字的、『目前所屬module』的屬性data x」與ModuleABC原有的屬性data x的關係到底是什麼？"）)
+    --
+    (Quiz : 在執行「aOfFandC = 55 ; testFC.newF = lambda : print( aOfFandC )」之後，testFC.newF()所印出的aOfFandC是testFC.aOfFandC還是aOfFandC？)
+    --
+  任何function在執行時都有globals，而這些globals就是「此function之『所屬module』」的「屬性data」(與「屬性functions」) # 「global宣告」對二者都適用
+
+    # 純好奇：根據本人對Python的哲學的了解，應該會...
+    >>> def F123() :
+    ...   print( 123 )
+    ... 
+    >>> def F456() :
+    ...   global F123
+    ...   F123 = lambda : print( 456 )   # recall the 'lambda' of OurScheme ...
+    ... 
+    >>> F123()
+    123
+    >>> F456()
+    >>> F123()
+    456
+    # "Yes！" (我們這種人都是很無聊的！Don't you think so？)
+
+--- Time for an example of 'from ModuleN import *' ---
+
+>>> from StartUpScript import *
+
+>>> B( 'cat ~/bin/PyTestOfFandC_07.py' )
+
+#!/Users/hsia/opt/anaconda3/bin/python3.9
+# File name : PyTestOfFandC_07.py
+
+aOfFandC     = 10
+bOfFandC_    = [10, [20, 30], 40]
+_cOfFandC    = 30
+_dOfFandC_   = 40
+__eOfFandC   = 50
+__fOfFandC_  = 60
+__gOfFandC__ = 70
+
+def G() :                       # G()會改變兩個globals：aOfFandC與bOfFandC_ ； 這兩個都有被"import"進來
+  global aOfFandC, bOfFandC_
+  aOfFandC += 111
+  bOfFandC_[0] += 123
+  bOfFandC_[1][1] += 456
+
+def PrintModuleVar() :
+  print( "Value of aOfFandC :",     aOfFandC )
+  print( "Value of bOfFandC_ :",     bOfFandC_ )
+  print( "Value of _cOfFandC :",    _cOfFandC )
+  print( "Value of _dOfFandC_ :",   _dOfFandC_ )
+  print( "Value of __eOfFandC :",   __eOfFandC )
+  print( "Value of __fOfFandC_ :",  __fOfFandC_ )
+  print( "Value of __gOfFandC__ :", __gOfFandC__ )
+
+print( "(Module path : ~/bin/PyTestOfFandC_07.py) Value of '__name__' :", __name__ )
+
+if __name__ == "__main__" :
+  aOfFandC     += 10000
+else :
+  aOfFandC     += 20000
+
+print( "Value of aOfFandC : ", aOfFandC )
+G()
+print( "Value of aOfFandC : ", aOfFandC )
+
+>>> from PyTestOfFandC_07 import *
+(Module path : ~/bin/PyTestOfFandC_07.py) Value of '__name__' : PyTestOfFandC_07
+Value of aOfFandC :  20010    # <------ __name__ 的值不是"__main__""
+Value of aOfFandC :  20121    # <------ 因為G()被呼叫了，所以aOfFandC被加了111
+
+>>> sorted( vars() )          # <------ 注意底線開頭的names沒被import進來
+['B', 'G', 'PrintModuleVar', 'S', '__annotations__', '__builtins__', '__doc__', '__loader__', '__name__', '__package__', '__spec__', 'aOfFandC', 'bOfFandC_', 'os', 'pprint', 'subprocess', 'sys']
+
+>>> PrintModuleVar()
+Value of aOfFandC : 20121                    # <------- PyTestOfFandC_07這module之中的aOfFandC的值
+Value of bOfFandC_ : [133, [20, 486], 40]    # <------- PyTestOfFandC_07這module之中的bOfFandC_的值
+Value of _cOfFandC : 30
+Value of _dOfFandC_ : 40
+Value of __eOfFandC : 50
+Value of __fOfFandC_ : 60
+Value of __gOfFandC__ : 70
+
+>>> aOfFandC                                 # <------- the current fictitious top-level module之中的aOfFandC的值
+20121
+>>> bOfFandC_                                # <------- the current fictitious top-level module之中的bOfFandC_的值
+[133, [20, 486], 40]
+
+>>> G.__module__                             # <------- G()事實上不是the current fictitious top-level module之中的function
+'PyTestOfFandC_07'
+
+>>> G()
+
+>>> aOfFandC                                 # <------- the current fictitious top-level module之中的aOfFandC的值沒變
+20121
+
+>>> bOfFandC_                                # <------- 倒是the current fictitious top-level module之中的bOfFandC_C的內容有變
+[256, [20, 942], 40]
+
+>>> PrintModuleVar()
+Value of aOfFandC : 20232                    # <------- PyTestOfFandC_07這module之中的aOfFandC的值(注意與上面的aOfFandC的值不一樣)
+Value of bOfFandC_ : [256, [20, 942], 40]    # <------- PyTestOfFandC_07這module之中的bOfFandC_的值(注意與上面的bOfFandC_的值一樣)
+Value of _cOfFandC : 30                      #          Q：Why？
+Value of _dOfFandC_ : 40
+Value of __eOfFandC : 50
+Value of __fOfFandC_ : 60
+Value of __gOfFandC__ : 70
+
+--- END - Time for an example of 'from ModuleN import *' ---
+
+  倒是object的概念要尊重！
+
+    有些objects是primitive objects (primitive objects事實上是其他語言中的values)。
+
+    除了primitive-objects之外，每個object都可以有它「自有的data」(即所謂的「屬性data」)與「屬性function」。
+    # Primitive objects沒有「屬性data」，不過它們有「屬性function」。
+
+    屬性又分作「genuine屬性」與「衍伸屬性」兩種。「genuine屬性」是object「自有」者，「衍伸屬性」則來自其他地方、只是可透過此object reference之而已。
+
+    原則上，只要呼叫 vars( anObj ) 就可知道 anObj有哪些genuine屬性(包括「genuine屬性data」與「genuine屬性function」)。
+    
+    「屬性data」是(任何人都)可以reference的，「屬性function」則是(任何人都)可以呼叫的。    # i.e., "public", as it is called in other languages
+
+    而且「一個object有哪些屬性」這件事是可以調整的。 Just do : anObj.b = ... 或 del anObj.b 
+     # 任何object都是如此 (不管是instance-obj還是class-obj還是module-obj還是func-obj)
+
+    如果一個object是經由a = Some()被創造出來的，那它在被創造出來的時候就會(依據Some這個class的定義)具有某些屬性。
+    凡是經由a = Some()被創造出來的objects，我們統稱之為instance-objects。
+
+    instance-objects的屬性分作「genuine屬性」與「衍伸屬性」兩種： # 有點類似function在執行時的local var有「genuine local var」與「fake local var」兩種
+
+      在instance-obj剛被創造出來的時候(也就是 anObj = Some() 剛執行完的時候)、
+
+        相對應的class-object（即Some這個class-object）的「屬性function」就自動成為此instance-obj的 「衍伸屬性function」，
+
+        而所有的「相對應的class-object的『屬性data』」(也就是Some這個class-object的所有「屬性data」)也自動成為instance-obj的「衍伸屬性data」、
+
+          除非在創造此instance-obj時(也就是Some.__init__( anObj, ...)在執行時)有對同名字的屬性作assign的動作(從而使該屬性成為anObj的「genuine屬性」)
+
+    Module也是一種object，不過它不是經由a = Some()創造出來的，Class-objects也不是經由a = Some()創造出來的。
+
+    Function-objects、class-objects、與module-objects這三"種"objects都是經由「定義」的方式而implicitly創造出來的、
+    而不是經由a = Some()這種方式explicitly創造出來的。
+
+    換言之，總共有五種objects : instance-objects, module-objects, class-objects, function-objects, 與primitive-objects。
+           其中instance-objects有呼叫「屬性function」時的特殊待遇( a.F(...) 會被轉換成 Some.F(a, ...) )，
+               而primitive-objects則沒有「屬性data」(但有「屬性function」)
+
+Class-objects的「(default)屬性data」是由其定義決定之，
+
+  e.g.,
+
+  class Class1 :
+    data1 = 10
+    data2 = 20
+    def __init__( self ) :
+      ...
+    def F() :
+      ...
+    ...
+
+  就決定
+
+  'Class1'所name的class-object有'data1'與'data2'這兩個屬性data
+
+a = Class1() 除了產生一個 ('a'所name的) instance-object (an instance of Class1) 之外、也有implicitly呼叫 Class1.__init__( a )。
+
+以上就是幾乎所有「Python有關OOP的設計」。  # 也許再加上繼承的概念與一些'from ModuleABC import *'的限制與name-mangling的特殊設計。  That's all！
+
+####### 不過還是要談一下「如何(正確的)定義一個class以及其衍伸class」#######
+
+>>> class Test :
+...   x = 10                         # class-object (即Test) 的(default)屬性data是寫在這裡
+...   def __init__( self ) :         # 在此constructor產生self(supposedly是個此class的instance-object)的(default)屬性data
+...     self.x1 = 10                 #   例如x1與下面這一行的y1
+...     self.y1 = self.x1 + self.x   # x(只要是reference而非update) 事實上是 self的「衍伸屬性data」(Test的屬性data)
+...     z1 = 100                     # z1只是__init__()的區域變數
+...   def F( whatever ) :
+...     print( whatever.x )
+...   def G() :
+...     print( Test.x )
+... 
+>>> test = Test()
+
+>>> sorted( vars( Test ) )   # Test的genuine屬性(包括genuine屬性functions)
+['F', 'G', '__dict__', '__doc__', '__init__', '__module__', '__weakref__', 'x']
+
+>>> sorted( Test.__dict__ )  # 只是要證明'vars( Test )'事實上是直接return Test.__dict__
+['F', 'G', '__dict__', '__doc__', '__init__', '__module__', '__weakref__', 'x']
+
+>>> sorted( vars( test ) )  # test這個instance-obj的genuine屬性(注意沒有genuine屬性function！ instance-obj只有genuine屬性data)
+['x1', 'y1']
+
+>>> dir( test )             # test這個instance-obj的衍伸屬性(包括衍伸屬性functions)
+['F', 'G', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'x', 'x1', 'y1']
+
+>>> dir( Test )             # 只是要show「test這個instance-obj的所有衍伸屬性都是來自Test(的衍伸屬性)」
+['F', 'G', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'x']
+
+
+>>> class RefinedTest( Test ) : # RefinedTest是Test的衍伸class (它也可以是 Test1, Test2, Test3 三者共同的衍伸class ; 只要三者都有出現於參數區即可)
+...   refined_x = 10            # 「class-object的『屬性』的繼承」是自動的(亦即：RefinedTest這個class-object不用做任何事就會有Test的所有屬性)
+...   def __init__( self ) :    
+...                             # 「instance-object的『屬性data』的繼承」則必須要靠「呼叫上一層的constructor」才行
+...     super().__init__()      # For any call to this __init__() such as a.__init__(), execute a.__init__() here ;
+...                             #   however, the __init__() being called this time is the one defined in the parent class
+...                             # This way of doing things is to mimic the use of 'super()' in a Java constructor
+...     # 也就是 Test.__init__( self ) ； 事實上左邊這個寫法較好(不用硬加一些如上的ad hoc觀念)、也比較general
+...     
+...     self.refined_x1 = 10
+...     self.refined_y1 = self.x1 + self.x   # x是個自動有的衍伸屬性data(它是RefinedTest的衍伸屬性data)； x1則要靠呼叫Test.__init__( self )才會有
+...     z1 = 100
+...   def Refined_F( whatever ) :
+...     print( whatever.refined_x )
+...   def Refined_G() :
+...     print( Test.refined_x )
+...   def G() :
+...     pass
+... 
+>>> 
+>>> refined_test = RefinedTest()
+
+>>> sorted( vars( RefinedTest ) )  # genuine屬性
+['G', 'Refined_F', 'Refined_G', '__doc__', '__init__', '__module__', 'refined_x']
+
+>>> dir( RefinedTest )             # genuine屬性 + 衍伸屬性
+['F', 'G', 'Refined_F', 'Refined_G', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'refined_x', 'x']
+
+>>> vars( refined_test )           # genuine屬性(注意沒有genuine屬性functions)
+{'x1': 10, 'y1': 20, 'refined_x1': 10, 'refined_y1': 20}
+
+>>> dir( refined_test )            # genuine屬性 + 衍伸屬性
+['F', 'G', 'Refined_F', 'Refined_G', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'refined_x', 'refined_x1', 'refined_y1', 'x', 'x1', 'y1']
+
+>>> RefinedTest.G()   # G() has been overridden in RefinedTest  # 「覆蓋」這件事、在Python倒是蠻自然的(Python根本就是以「覆蓋」為業，到處都可以覆蓋！)
+>>> 
+
+請注意：
+
+在  任何function  的  執行過程之中...
+
+1. 你不可能經由 self.class_x = ... (或 obj.class_x = ...) 的方式  來  更改(update)  self(或obj)所屬class的class-obj  的  class_x屬性 
+   唯有使用  Class1.class_x = ...  的方式  才能  更改(update)到  self(或obj)所屬class的class-obj(即Class1)  的  class_x屬性
+
+2. 本來 ancestor function的local var. 與 所屬module的屬性data(即所謂的global data) 也是一樣的狀況、甚至更糟(因為根本無法update這些local var與global var)
+   而這就是Python提供'nonlocal'與'global'宣告的原因！(讓我們能在一個function執行的過程之中  更改  ancestor function的local var. 與  所屬module的屬性data)
+
+   (Quiz : 可以透過'nonlocal'宣告 來 更改 ancestor function的local function的定義 嗎？)
+
+---------------------------
+
+1. 再一次強調：Assign(一個東西給一個name)即宣告(這個name於「目前的namespace」之中)、除非有在此assignment上方作'nonlocal'或'global'宣告。
+             而且只要function中有這麼一個statement(不管出現在function的哪一部分)就算數，Python並沒有要求一定要執行到這個assignment stmt才算數。
+
+             注意Python並沒有把「宣告」與「存在」視為同一回事。
+             前者是個「文法檢查的概念」，後者則是個「執行環境的概念」。
+             此二者有可能同時發生、也可能不同時發生。
+
+     # Python所謂的namespace，就只是一個「a set of names」(而已)
+
+     # A Python-namespace可能是module(-object)的屬性 (其中的「屬性data」、對屬於這個module的functions而言是global var.)、
+       也可能包括function()在執行時的local var.與para.、 # Python的conditionals與loops沒有自己的local vars ; local var.只有function才有
+       也可能是某個instance-obj的屬性(包括「屬性data」與「屬性function」)、
+       也可能是某個class-object的屬性(包括「屬性data」與「屬性function」)、
+       也可能是某個function-object的「屬性data」 (看不出有什麼用就是了)
+
+2. vars( anObj ) 可以 show anObj 的 namespace                     # 即anObj的屬性 目前有哪些、以及其值為何
+   locals() 可以 show 「目前正在執行的這個function」 可 reference的"local names" (≠ local vars)  # 目前有哪些、以及其值為何
+   # 請注意以上兩個是完全不一樣的概念。一個是function在執行時的temporary data，一個是permanent data (只要object存在就有、而objects一經產生就理論上永遠存在)
+   # 後者有包括到前者，前者不可能牽涉到後者
+
+3. def vars( anObj ) :        # 事實上是
+     return anObj.__dict__    # That's all, folks!
+
+4. 也就是說、如果我們能更動 anObj 的 __dict__ 這個"屬性"的內容，我們就能改變 anObj的屬性
+
+   e.g., anObj.__dict__['x'] = 100
+
+5. "primitive objects"(Python版的"values")  沒有  __dict__ 這個"屬性"； 
+
+   # 每一個「執行中的functions」(即call-stack上的每一個activation records)應該都有一個類似 __dict__ 的東西，但system不show它 (for very good reasons)
+   
+6. 有些objects (如class objects) 的 __dict__ 、系統不讓我們(輕易？)改。
+
+7. 'x = x + 1'有可能會導致error，因為尚未宣告x就要取其值。但如果ancestor function已有設定x這個local就可以。
+   但此時'x = x + 1'並不是改變ancestor function的x (假設並沒有作'nonlocal'的宣告)，而是宣告一個local x。
+
+8. 同理，'self.x = self.x + 1'有可能會導致error，因為尚未宣告self的x就要取其值。但如果所屬class已有設定x這個data就可以。
+   但此時'self.x = self.x + 1'並不是改變所屬class的x，而是宣告一個self的instance data x。
+
+9. 同理，假設ModuleABC之中有moduleABC_x這個屬性data，'from ModuleABC import * ; moduleABC_x = moduleABC_x + 1'
+   並不會改變ModuleABC的moduleABC_x，而是宣告一個「目前所屬module」的屬性data moduleABC_x。
+
+10. 在任何地方、只要系統允許我們改anObj的__dict__ (e.g., anObj.__dict__['x'] = 100)，我們就可以 anObj.x = 100 ；
+    二者的效果是一樣的。
+
+    而且系統並「不」要求「anObj必須已經有x這個instnace data」才能這樣改其值。
+
+    也就是說，我們事實上可以任意增加一個object (be it a module or a class or an instance of a class) 的屬性。Just do : anObj.x = ...
+    也可以任意去掉一個object (be it a module or a class or an instance of a class) 的屬性。 Just do : del anObj.x    
+
+    # 當然， we can also delete a local var (or 某object的屬性) inside any function
+    # Just do : del x (or del self.x, or del os.happy)
+
+--------------------------------------------------------------------------------
+
+                   OOP, the Python way (How Python-implementation works w.r.t. OOP)
+
+OOP makes a distinction between class methods and instance methods.
+
+Java and C++ uses keywords to make this distinction explicit.
+Java and C++ also adopt the idea of having an implicit parameter for instance methods : 'this'
+
+# Q : Why is it the case that, in Java/C++, class methods cannot access instance data?
+
+Python does not do any of the above.
+
+Python users must keep it to themselves regarding what methods are class methods and what methods are instance methods.
+The Python system itself does not make such a distinction.
+
+Whether the code is 'Class1.F1()' or 'c1.F2()', Python just calls 'Class1.F1()' or 'Class1.F2()'. This is the same as what Java/C++ does.
+For 'c1.F2()', Python actually calls 'Class1.F2( c2, ... )'. This is also the same as what Java/C++ does.
+
+But unlike Java/C++, the code 'c1.F1()' will lead to a TypeError exception in Python (which is good!).
+
+On the other hand, 'Class1.F2( 123 )' is a perfectly legal function call in Python. # well, this is consistent with Python philosophy
+
+With the use of decorators, Python also allows the user to "decorate" a 'Class1.F1()' as 'classmethod'.
+
+Once 'Class1.F1()' has been "decorated" as a class-method (by putting '@classmethod' above the definition of 'F1()'), Python will call whateverName.F1( whateverName, ...) when executing the code 'whateverName.F1( ... )'.
+
+This is how a (user-intended) class method such as 'Class1.F1()' can (correctly) access and modify class data. (def F1( clsSelf ) : clsSelf.data1 = 20)
+
+To correctly access and modify class data in a (user-intended) instance method, user should do something like (def F2( instSelf ) : instSelf.__class__.data1 = 10)
+
+# Q : In general, distinguishing between instance data and class data may be somewhat easier in Python. Why?
+
+# Q : Two instances of the same class can have different instance data. How can that happen?
+
+# Q : As time goes by, a class-object can have more class data. How can that be possible?
+
+####### END - Final Summary written on 2023-11-10, revised on 2023-12-19 #######
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+         Final Comments on 「What are the objects we can use when doing Python programming」
+
+To import any module as a module-object (an instance data of the current fictitious, top-level module-obj), do, e.g., 'import ModuleName' 
+# 1. 'from StartUpScript import *'  # Do 'PYTHONPATH=$PYTHONPATH:~/bin' before you run python (you must also have ~/bin/StartUpScript.py)
+# 2. Check 'sorted( sys.modules )' and 'sys.builtin_module_names' to see the modules we can import
+# 3. Use "B( 'ls -al somePath' )" to check each path in sys.path to see what other modules are there that we can import
+
+Whenever a function is being executed, ... # 任何function在執行時都有以下的"東西"可以access(只不過有些"東西"是不能update的、只能reference)
+
+  genuine local vars/functions # 有 'x = ...' 且 無相對應的'global'或'nonlocal'宣告 者
+
+  fake local vars/functions    # legally宣告為'nonlocal'者(請注意：ancestor function's local funcs 也一樣可以宣告為nonlocal； It's just a name！)
+
+  all ancestor functions' local vars/functions # 不管是genuine者還是fake者
+
+  global vars/functions        # 「所屬module-object」(=「此function的定義出現在其中」的module(注意Python session本身也是一個"module"))的所有屬性
+                               # 包括「所屬module-object」的instance data之中的所有(用'import ...'所創造的)module-objects如os與sys者
+
+  built-in vars/functions      # Check with dir( __builtins__ ) to see what built-in vars/functions are there
+
+這些vars 事實上全都是 (各種)objects的names (連functions都是function-objects的names，只是這些function-objects基本上除了呼叫其__call__()之外無甚他用)
+
+而這些objects(包括所有的module-objects)全都有其
+
+  genuine屬性data/functions
+
+  衍伸屬性data/functions
+
+而這些objects的 genuine屬性data 與 衍伸屬性data、又全都是 (各種)objects的names ...   
+# and the situation goes on and on ... # 理論上可以沒完沒了...
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+～～～～～～～～～～～～～～～～～～ break ～～～～～～～～～～～～～～～～～～
+
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+                                iterables, iterators, generators, generator expressions
+
+What is an iterable?
+
+  Conceptually, a (real or conceptual) set, with elements that can be systematically "visited" according to some rule or pattern.
+
+  Formally, an object that has the '__iter__()' method. (i.e., an object that can be passed as the sole argument to 'iter()')
+  It is required that this __iter__() must return an iterator.
+
+What is an iterator?
+
+  Conceptually, an iterator is associated with some iterable and can be used to iterate over the elements of this iterable.
+
+  Formally, an object that has the '__next__()' method. (i.e., an object that can be passed as the sole argument to 'next()')
+  (Each time when the __next__() method of the iterator is called, a "next element" of the underlying iterable is returned ;
+   if there is no more "next element" to return, the iterator should raise a 'StopIteration' exception.)
+
+★★★★★ Rationale : we get iterators (instances of xyz_iterators) from iterables, and we repeatedly use 'next( theIterator )' to get the next element of some underlying iterable until a 'StopIteration' exception is raised. ★★★★★
+
+Python for-loops :
+
+  for i in SOMETHING :
+    ... # code that can optionally access 'i', including changing its "binding" ( but this will not affect "the next i" (why?) )
+
+It should be equivalent to the following code fragment :
+
+    it = iter( SOMETHING )    
+    try :
+      while True :
+        i = next( it )
+        ... # code that can optionally access 'i', including changing its binding
+    except StopIteration :
+      pass
+
+>>> for i in (10, 20, 30) :
+...   print( i )
+... 
+10
+20
+30
+
+>>> iter( (10, 20, 30) )
+<tuple_iterator object at 0x7fc650218970>
+
+>>> (10, 20, 30).__iter__()
+<tuple_iterator object at 0x7fc6501009d0>
+
+How do we check whether SOMETHING is an iterable?
+
+  Just check whether dir( SOMETHING ) contains '__iter__()'.
+
+What does it mean when the result of 'dir( SOMETHING )' contain both '__iter__()' and '__next__()'?
+
+  Most likely, it means that SOMETHING.__iter__() just return SOMETHING itself.
+
+class IterableExample:
+  
+  def __init__(self, max=0):
+    self.max = max
+  
+  def __iter__(self):
+    self.n = 0
+    return self
+  
+  def __next__(self):
+    if self.n <= self.max:
+      if self.n % 2 ==0:
+        result=self.n
+        self.n += 1
+        return result
+      else:
+        self.n += 1
+        return 1
+    else:
+      raise StopIteration
+    
+# END - class IterableExample
+
+# let us now create an iterable object - an object that has an '__iter__(self)' instance method which, when called, will return an iterator object (an object that has a '__next__(self)' instance method that satisfies the 'for'-loop-requirement).
+
+numbers = IterableExample(10)  
+
+for i in numbers : # since 'numbers' is an iterable object
+	print(i)
+
+What may be not-so-OK when SOMETHING.__iter__() just return SOMETHING itself?
+
+>>> help( range )
+
+class range(object)
+ |  range(stop) -> range object
+ |  range(start, stop[, step]) -> range object
+ |  
+ |  Return an object that produces a sequence of integers from start (inclusive)
+ |  to stop (exclusive) by step.  range(i, j) produces i, i+1, i+2, ..., j-1.
+ |  start defaults to 0, and stop is omitted!  range(4) produces 0, 1, 2, 3.
+ |  These are exactly the valid indices for a list of 4 elements.
+ |  When step is given, it specifies the increment (or decrement).
+ |  
+ |  Methods defined here:
+ |  
+ |  __bool__(self, /)
+ |      True if self else False
+ |  
+ |  __contains__(self, key, /)
+ |      Return key in self.
+ |  
+ |  __eq__(self, value, /)
+ |      Return self==value.
+ |  
+ |  __ge__(self, value, /)
+ |      Return self>=value.
+ |  
+ |  __getattribute__(self, name, /)
+ |      Return getattr(self, name).
+ |  
+ |  __getitem__(self, key, /)
+ |      Return self[key].
+ |  
+ |  __gt__(self, value, /)
+ |      Return self>value.
+ |  
+ |  __hash__(self, /)
+ |      Return hash(self).
+ |  
+ |  __iter__(self, /)
+ |      Implement iter(self).
+ |  
+ |  __le__(self, value, /)
+ |      Return self<=value.
+ |  
+ |  __len__(self, /)
+ |      Return len(self).
+ |  
+ |  __lt__(self, value, /)
+ |      Return self<value.
+ |  
+ |  __ne__(self, value, /)
+ |      Return self!=value.
+ |  
+ |  __reduce__(...)
+ |      Helper for pickle.
+ |  
+ |  __repr__(self, /)
+ |      Return repr(self).
+ |  
+ |  __reversed__(...)
+ |      Return a reverse iterator.
+ |  
+ |  count(...)
+ |      rangeobject.count(value) -> integer -- return number of occurrences of value
+ |  
+ |  index(...)
+ |      rangeobject.index(value) -> integer -- return index of value.
+ |      Raise ValueError if the value is not present.
+ |  
+ |  ----------------------------------------------------------------------
+ |  Static methods defined here:
+ |  
+ |  __new__(*args, **kwargs) from builtins.type
+ |      Create and return a new object.  See help(type) for accurate signature.
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors defined here:
+ |  
+ |  start
+ |  
+ |  step
+ |  
+ |  stop
+(END)
+
+  >>> a = range(3)
+  >>> a
+  range(0, 3)
+  
+  >>> b = iter(a)      # 'a' only has '__iter__()' ; 'a' does not have '__next__()'
+  >>> b
+  <range_iterator object at 0x7fd808245120>
+  
+  >>> c = iter(a)      # 'c' and 'b' are two separate iterators ; each one iterates over 'a' in its own way
+  >>> c
+  <range_iterator object at 0x7fd808228690>
+
+>>> help( b )
+class range_iterator(object)
+ |  Methods defined here:
+ |  
+ |  __getattribute__(self, name, /)
+ |      Return getattr(self, name).
+ |  
+ |  __iter__(self, /)
+ |      Implement iter(self).
+ |  
+ |  __length_hint__(...)
+ |      Private method returning an estimate of len(list(it)).
+ |  
+ |  __next__(self, /)
+ |      Implement next(self).
+ |  
+ |  __reduce__(...)
+ |      Return state information for pickling.
+ |  
+ |  __setstate__(...)
+ |      Set state information for unpickling.
+(END)
+  
+  >>> b1 = iter(b)     # 'b' has both '__iter__()' and '__next__()'
+  >>> b2 = iter(b)
+  
+  >>> next(b)
+  0
+  >>> next(b)
+  1
+  >>> next(b1)
+  2
+  >>> next(b2)
+  Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+  StopIteration
+  >>> next(b)
+  Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+  StopIteration
+  
+  # The above should server to prove that 'b', 'b1', and 'b2' are the same iterator
+
+  >>> b
+  <range_iterator object at 0x7fd808245120>
+  >>> b1
+  <range_iterator object at 0x7fd808245120>
+  >>> b2
+  <range_iterator object at 0x7fd808245120>
+
+  >>> next(c)   # 'c', on the other hand, is a different iterator (that also iterates over 'range(3)')
+  0
+  >>> next(c)
+  1
+  >>> 
+
+The notion of an enumerate is no different from that of an iterable ... 
+# 只是加入一個index的概念而已、showing that this is the nth object of the iterable that we visit
+
+  for i, item in enumerate( anIterable ) :
+    print( "Value of i and item :", i, item )
+
+is in fact
+
+  it = iter( (20,30,40) )
+  i = hiddenIndex = 0
+  try :
+    while True :
+      item = next( it )
+      print( "Value of i and item :", i, item )
+      i = hiddenIndex = hiddenIndex + 1
+  except StopIteration :
+    pass
+
+-------------------------------------------------------------------------------
+
+                             Generator function and generator object
+
+Two meanings of 'yield' : (農作物與利潤的)產生  與  讓路      # Python的'yield'指的是第一個、不過也有那麼一點「讓出執行權」的味道。
+
+Generator
+
+  (a) 只要function之中有一個yield-statement( e.g., yield 3*n )，此function就是一個generator-function (Python稱之為generator)
+
+  (b) 「直接呼叫一個generator-function」事實上並沒有真的呼叫到這個function(從而導致此function被執行)；「直接呼叫一個generator-function」所得到的只是一個系統所製作的「此generator-function的"真正呼叫者"」(此即本課程所謂的generator-object)
+
+  (c) 若要真正的呼叫一個generator-function(從而導致此function被執行)，必須要呼叫此「generator-function呼叫者」的__next__()才行。
+  
+  小結：只有呼叫「generator-function呼叫者」的__next__()才能真正呼叫generator-function(從而導致此function被執行)，「直接呼叫一個generator-function」只會得到一個「此generator-function的"呼叫者"」、並不會真的執行此generator function。
+
+注意：
+  Python相關文章把此處所謂的generator-function叫作「generator」；至於此處所謂的generator-object，Python相關文章則只說它是個「iterator」(但說老實話，雖然generator-object的behavior與iterator一樣，但它的運作可是與一般的iterator完全不同)
+
+記住：
+
+  'GenFunc()' contains 'yield'     # Any function that contains 'yield' is a generator-function
+
+  genObj = GenFunc()               # The call to a generator-function will results in a generator-object
+
+  # then ...
+  next( genObj )
+  next( genObj )
+  ...
+  # until StopIteration is raised
+
+>>> def GenF() :      # A generator-function (because there is at least one 'yield' in the code
+...   yield 5
+...   yield 10
+... 
+>>> 
+
+>>> a = GenF()        # Calling a generator-function 'GenF()' will only get us a generator-object 'a'
+
+>>> help( a )         # a generator-object is both an iterable ('__iter__()') and an iterator ('__next__()') by definition
+
+GenF = class generator(object)
+ |  Methods defined here:
+ |  
+ |  __del__(...)
+ |  
+ |  __getattribute__(self, name, /)
+ |      Return getattr(self, name).
+ |  
+ |  __iter__(self, /)
+ |      Implement iter(self).
+ |  
+ |  __next__(self, /)
+ |      Implement next(self).
+ |  
+ |  __repr__(self, /)
+ |      Return repr(self).
+ |  
+ |  close(...)
+ |      close() -> raise GeneratorExit inside generator.
+ |  
+ |  send(...)
+ |      send(arg) -> send 'arg' into generator,
+ |      return next yielded value or raise StopIteration.
+ |  
+ |  throw(...)
+ |      throw(value)
+ |      throw(type[,value[,tb]])
+ |      
+ |      Raise exception in generator, return next yielded value or raise
+ |      StopIteration.
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors defined here:
+ |  
+ |  gi_code
+ |  
+ |  gi_frame
+ |  
+ |  gi_running
+ |  
+ |  gi_yieldfrom
+ |      object being iterated by yield from, or None
+(END)
+
+>>> dir( a )          # just to make sure 'a' satisfies the requirements of being an iterable ('__iter__()') and an iterator ('__next__()')
+['__class__', '__del__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__iter__', '__le__', '__lt__', '__name__', '__ne__', '__new__', '__next__', '__qualname__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'close', 'gi_code', 'gi_frame', 'gi_running', 'gi_suspended', 'gi_yieldfrom', 'send', 'throw']
+
+# Now that 'a' has both __iter__() and __next__() ...
+
+>>> for i in a :
+...   print( i )
+... 
+5
+10
+
+# Why does the code fragment below (using 'GenF()') also work?
+
+>>> for i in GenF() :
+...   print( i )
+... 
+5
+10
+
+>>> type( a )
+<class 'generator'>
+
+>>> type( GenF )
+<class 'function'>
+
+# For those who wrote PL projects, you should know that there is something called 'Eval()'. What does this function do?
+
+-------------------------------------------------------------------------------
+
+以下介紹Python(起碼在概念上)如何使用generator的機制來implement「generator expression」與comprehension
+
+generator expression df= a mathematical expression for specifing a set (with elements to be iterated upon)
+
+comprehension df= 用generator expression來產生list、set或dictionary
+
+緣起：
+
+1. 在理論上，Java interpreter可以先將一個for迴圈 翻譯 成一個相對應的while迴圈、然後再執行此while迴圈。
+   不過Java應該是沒這樣做。
+
+   for ( <cond-1> ; <cond-2> ; <cond-3> )
+     <loop-body>
+
+   df=
+
+   <cond-1>
+   while ( <cond-2> ) {
+     <loop-body>
+     <cond-3>
+   }
+
+2. Python interpreter倒是可以這樣做。
+   就算Python interpreter沒有真的先把for-loop-with-iterable translate into while-loop-with-iterable再執行，
+   也應該有把for-loop with generator expression translate into for-loop with generator-function再執行。
+   至於comprehension，也應該是(起碼在概念上)先translate into for-loop with generator expression，
+   然後再把for-loop with generator expression translate into for-loop with generator-function再執行。
+
+   Recall that
+
+   for i in SOMETHING :     # SOMETHING must be an iterable (so that iter( SOMETHING ) will return an iterator)
+     ...
+
+   df=
+
+   it = iter( SOMETHING )    
+   try :
+     while True :
+       i = next( it )
+       ... 
+   except StopIteration :
+     pass
+
+-------------------------------------------------------------------------------
+
+               Generator expression - A useful "syntatic sugar"
+
+# syntatic sugar df= something we can live without, but with it, things can become very convenient.
+
+>>> genExpr = ( i for i in range(10) if i%2 == 1 )   # 注意the use of '(' and ')'
+
+>>> type( genExpr )
+<class 'generator'>
+
+# So, the evaluation of '( i for i in range(10) if i%2 == 1 )' results in a generator-object.
+
+>>> a = iter( genExpr )
+
+>>> next( genExpr )
+1
+>>> next( genExpr )
+3
+>>> next( a )
+5
+>>> next( a )
+7
+>>> next( genExpr )
+9
+>>> next( a )
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+>>> for i in genExpr :
+...   print( i )
+... 
+>>> # i.e., no output ...  (Q : why?)
+
+>>> for i in ( i for i in range(10) if i%2 == 1 ) :  # since '( i for i in range(10) if i%2 == 1 )' is an iterable
+...   print( i )
+... 
+1
+3
+5
+7
+9
+
+# Q : how does the idea of evaluation work in the above context?
+
+------- Let us try to understand the whole thing from the perspective of compilation -------
+
+--- Case 1 ---
+
+for i in ( i for i in range(10) if i%2 == 1 ) :
+  print( i )
+
+df=           # i.e., can be translated into
+
+def GenF1() :
+  for i in range(10) :     # 原來的「一行文」
+    if i%2 == 1 :          # 變成
+      yield i              # 這三行
+
+for i in GenF1() :         # 把原來的generator expression '( i for i in ... )'換成'GenF1()'
+  print( i )
+
+>>> def GenF1() :
+...   for i in range(10) :
+...     if i%2 == 1 :
+...       yield i
+... 
+>>> 
+>>> for i in GenF1() :
+...   print( i )
+... 
+1
+3
+5
+7
+9
+
+# Just want to emphasize that Python's for-construct only works with iterables
+# (An iterable is, when used as THE argument of 'iter()', will return an iterator.)
+
+>>> GenF1().__iter__()
+<generator object GenF1 at 0x7fc6502a5a50>
+
+>>> iter( GenF1() )
+<generator object GenF1 at 0x7fc6502a5f90>
+
+--- Case 2 ---
+
+>>> for i in ( (x,y,z) for x in range(1,30) for y in range(x,30) for z in range(y,30) if x**2 + y**2 == z**2 ) :
+...   print( i )
+... 
+(3, 4, 5)
+(5, 12, 13)
+(6, 8, 10)
+(7, 24, 25)
+(8, 15, 17)
+(9, 12, 15)
+(10, 24, 26)
+(12, 16, 20)
+(15, 20, 25)
+(20, 21, 29)
+
+-------
+
+for i in ( (x,y,z) for x in range(1,30) for y in range(x,30) for z in range(y,30) if x**2 + y**2 == z**2 ) :
+  print( i )
+
+df=           # i.e., can be translated into
+
+def GenF2() :
+  for x in range(1,30) :          # 原來的「一行文」
+    for y in range(x,30) :        # 變成
+      for z in range(y,30) :      # 這五行
+        if x**2 + y**2 == z**2 :  # 
+          yield (x, y, z)         # 
+
+for i in GenF2() :                # 把原來的generator expression '( i for i in ... )'換成'GenF2()'
+  print( i )
+
+>>> def GenF2() :
+...   for x in range(1,30) :
+...     for y in range(x,30) :
+...       for z in range(y,30) :
+...         if x**2 + y**2 == z**2 :
+...           yield (x, y, z)
+... 
+>>> 
+>>> for i in GenF2() :
+...   print( i )
+... 
+(3, 4, 5)
+(5, 12, 13)
+(6, 8, 10)
+(7, 24, 25)
+(8, 15, 17)
+(9, 12, 15)
+(10, 24, 26)
+(12, 16, 20)
+(15, 20, 25)
+(20, 21, 29)
+
+--- Case 3 ---
+
+def SeqOfCubic( start ) :   # a generator-function that will never be "exhausted" in calls
+  n = start
+  while True :
+    yield n**3
+    n += 1
+
+infiniteSeq = ( n*n for n in SeqOfCubic( 2 ) )  # a generator object whose __next__() calls the __next__() of another generator object
+
+for m in infiniteSeq :      # 不斷呼叫一個generator object的__next__()、取得其return值
+  if m < 50000 :
+    print( m )
+  else :
+    break                   # 小心別亂使用會產生infinite sequence的iterator於for-loop；一旦使用、這是唯一出迴圈的辦法！
+
+>>> def SeqOfCubic( start ) :   # a generator-function that will never be "exhausted" in calls
+...   n = start
+...   while True :
+...     yield n**3
+...     n += 1
+... 
+>>> 
+>>> infiniteSeq = ( n*n for n in SeqOfCubic( 2 ) )  # a generator object whose __next__() calls the __next__() of another generator object
+
+>>> for m in infiniteSeq :      # 不斷呼叫一個generator object的__next__()、取得其return值
+...   if m < 50000 :
+...     print( m )
+...   else :
+...     break                   # 小心別亂使用會產生infinite sequence的iterator於for-loop；一旦使用、這是唯一出迴圈的辦法！
+... 
+64
+729
+4096
+15625
+46656
+
+-------
+
+infiniteSeq = ( n*n for n in SeqOfCubic( 2 ) )  # a generator object whose __next__() calls the __next__() of another generator object
+
+df=           # i.e., can be translated into
+
+def GenF3() :                 
+  for n in SeqOfCubic( 2 ) :    # 原來的'( n*n for n in SeqOfCubic( 2 ) )'
+    yield n*n                   # 變成這兩行
+
+infiniteSeq = GenF3()           # 把原來的generator expression '( n*n for n in SeqOfCubic( 2 ) )'換成'GenF3()'
+
+>>> def GenF3() :                 
+...   for n in SeqOfCubic( 2 ) :    # 原來的'( n*n for n in SeqOfCubic( 2 ) )'
+...     yield n*n                   # 變成這兩行
+... 
+>>> infiniteSeq = GenF3()           # 把原來的generator expression '( n*n for n in SeqOfCubic( 2 ) )'換成'GenF3()'
+>>> 
+>>> for m in infiniteSeq :
+...   if m < 50000 :
+...     print( m )
+...   else :
+...     break
+... 
+64
+729
+4096
+15625
+46656
+
+-------------------------------------------------------------------------------
+
+"Comprehension" - The use of generator expressions for creating lists、sets and dictionaries
+
+                     Another very useful "syntactic sugar"
+
+=== List comprehension ===
+
+# notice the use of '[' and ']' (and not '(' and ')') below
+
+--- Case 1 ---
+
+>>> [ i*2 for i in (10, 20, 30) ]
+[20, 40, 60]
+
+# the needed translation can be ...
+
+def ListComprehension() :
+  resultList = []
+  for i in ( i*2 for i in (10, 20, 30) ) :   # 直接把'[ ... ]'放在這裡，只是把它改為generator expression ('['與']'換成'('與')')
+    resultList.append( i )
+  return resultList
+
+ListComprehension()                          # 然後將'[ ... ]'翻譯成「呼叫此function」
+
+>>> def ListComprehension() :
+...   resultList = []
+...   for i in ( i*2 for i in (10, 20, 30) ) :
+...     resultList.append( i )
+...   return resultList
+... 
+>>> ListComprehension()
+[20, 40, 60]
+
+--- Case 2 ---
+
+>>> [ i**2 for i in range(10) if i % 2 == 1 ]
+[1, 9, 25, 49, 81]
+
+# the needed translation can be ...
+
+def ListComprehension() :
+  resultList = []
+  for i in ( i**2 for i in range(10) if i % 2 == 1 ) :   # 直接把'[ ... ]'放在這裡，只是把它改為generator expression ('['與']'換成'('與')')
+    resultList.append( i )
+  return resultList
+
+ListComprehension()                          # 然後將'[ ... ]'翻譯成「呼叫此function」
+
+>>> def ListComprehension() :
+...   resultList = []
+...   for i in ( i**2 for i in range(10) if i % 2 == 1 ) :
+...     resultList.append( i )
+...   return resultList
+... 
+>>> ListComprehension()
+[1, 9, 25, 49, 81]
+
+=========================
+
+# Whether the being used (in a the for-loop-translation) is an iterator object or a generator object,
+# it really doesn't matter ;
+# While a generator object may seem more flexible (in "yielding" the next element),
+# an iterator may be customized and thus made flexible too ;
+
+=========================
+
+=== Set comprehension ===
+
+# notice the use of '{' and '}' (and not '(' and ')') below
+
+--- Case 1 ---
+
+def updown(n):
+  """Generator that goes up to n and down again."""
+  for i in range(n):
+    yield i
+  for i in range(n, -1, -1):
+    yield i
+
+>>> def updown(n):
+...   """Generator that goes up to n and down again."""
+...   for i in range(n):
+...     yield i
+...   for i in range(n, -1, -1):
+...     yield i
+... 
+>>> 
+
+>>> { i for i in updown(5) }
+{0, 1, 2, 3, 4, 5}
+
+# the needed translation can be ...
+
+def SetComprehension() :
+  resultSet = set()
+  for i in ( i for i in updown(5) ) :   # 直接把'{ ... }'放在這裡，只是把它改為generator expression ('{'與'}'換成'('與')')
+    resultSet.update( {i,} )
+  return resultSet
+
+SetComprehension()                      # 然後將'{ ... }'翻譯成「呼叫此function」
+
+>>> def SetComprehension() :
+...   resultSet = set()
+...   for i in ( i for i in updown(5) ) :
+...     resultSet.update( {i,} )
+...   return resultSet
+... 
+>>> SetComprehension()
+{0, 1, 2, 3, 4, 5}
+
+=========================
+
+=== Dictionary comprehension ===
+
+# First, some basic understanding of dictinaries ...
+
+# Recall that a dictionary is a set, and that the following are different ways of creating the same dictionary (either by calling 'dict()' or by directly specifying the content of a dictionary) :
+
+a = { 'one': 1, 'two': 2, 'three': 3 }
+b = dict( one = 1, two = 2, three = 3 )   
+c = dict( zip( ['one', 'two', 'three'], [1, 2, 3] ) ) 
+d = dict( (   ('one', 1), ('two', 2), ('three', 3 )   ) )    
+e = dict( [   ('two', 2), ('one', 1), ('three', 3)    ] )
+
+for key, value in aDict.items() :
+  print( key, ":", value )
+
+for key in aDict.keys() :
+  print( key )
+
+for value in aDict.values() :
+  print( value )
+
+for key in aDict :
+  print( key, ":", aDict[key] )
+
+# END - Some basic understandings of dictionaries
+
+# Next, an investigation of zip - a very commonly seen built-in function for creating dictionaries
+
+>>> a = zip( (1,2,3), (4,5,6), (7,8,9) )  # note that we deliberately give three and not two arguments in zip()
+
+>>> a
+<zip object at 0x7fd9ce15a048>
+
+>>> list(a)     # <-----------------------
+[(1, 4, 7), (2, 5, 8), (3, 6, 9)]
+>>> tuple(a)
+()
+>>> dict(a)
+{}
+>>> list(a)     # <-----------------------
+[]
+
+# What happened??? (Why is it the case that two exactly the same calls 'list(a)' give completely different results)
+
+# what is a zip object anyway?
+
+>>> help( a )
+
+class zip(object)
+ |  zip(iter1 [,iter2 [...]]) --> zip object
+ |  
+ |  Return a zip object whose .__next__() method returns a tuple where
+ |  the i-th element comes from the i-th iterable argument.  The .__next__()
+ |  method continues until the shortest iterable in the argument sequence
+ |  is exhausted and then it raises StopIteration.
+ |  
+ |  Methods defined here:
+ |  
+ |  __getattribute__(self, name, /)
+ |      Return getattr(self, name).
+ |  
+ |  __iter__(self, /)          # <---------------
+ |      Implement iter(self).
+ |  
+ |  __new__(*args, **kwargs) from builtins.type
+ |      Create and return a new object.  See help(type) for accurate signature.
+ |  
+ |  __next__(self, /)          # <---------------
+ |      Implement next(self).
+ |  
+ |  __reduce__(...)
+ |      Return state information for pickling.
+(END)
+
+# So, a zip object is both an iterable ( since it has __iter__() ) and an iterator ( since it has __next__() ).
+
+# Now, how does 'list()' work?
+
+>>> help( list )
+Help on class list in module builtins:
+
+class list(object)
+ |  list() -> new empty list
+ |  list(iterable) -> new list initialized from iterable's items
+ |  
+ |  Methods defined here:
+ |  
+ |  __add__(self, value, /)
+ ...
+
+# So, 'list()' accepts an iterable as its sole argument and return a list "initialized from the iterable's items"
+
+# How does 'list( givenIterable )' work in producing a list from the given iterable? What do you think???
+
+HOW ABOUT DOING SOMETHING LIKE THE FOLLOWING ...
+
+def ResultingList( anIterable ) :
+  resultList = []
+  for i in anIterable :                             # 'anIterable'
+    resultList.append( [i] )
+  return resultList
+
+ResultingList( givenIterable )
+
+>>> a = zip( (1,2,3), (4,5,6), (7,8,9) )
+
+>>> def ResultingList( anIterable ) :
+...   resultList = []
+...   for i in anIterable :                             # 'anIterable'
+...     resultList.append( [i] )
+...   return resultList
+... 
+>>> 
+>>> ResultingList( a )
+[[(1, 4, 7)], [(2, 5, 8)], [(3, 6, 9)]]
+
+>>> next( a )
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+
+# That is, as a side effect of executing 'ResultingList( a )' (which implicitly calls 'next(a)' until StopIteration is raised), the elements of the zip object 'a' have been "exhausted". (This is actually due to the (inappropriate???) design that the zip object just returns itself (when its __iter__() is being called) as the resulting iterator. If the zip object returns something else as the resulting iterator (when its __iter__() is being called), the same situation would not have occurred.)
+
+# This naturally leads to the following result ...
+
+>>> ResultingList( a )
+()
+
+# In other word, a zip object is (deliberately made to be???) a "one time only" iterator.
+
+# This explains why in many many examples, zip objects are just used as "one time only" iterator.
+
+-----------
+
+On the side : 
+
+# For tuple creation, the situation is similar.
+
+def ResultingTuple( anIterable ) :
+  resultTuple = ()
+  for i in anIterable :                             # 'anIterable'
+    resultTuple = resultTuple.__add__( (i,) )
+  return resultTuple
+
+ResultingTuple( givenIterable )
+
+>>> a = zip( (1,2,3), (4,5,6), (7,8,9) )
+
+>>> def ResultingTuple( anIterable ) :
+...   resultTuple = ()
+...   for i in anIterable :                             # 'anIterable'
+...     resultTuple = resultTuple.__add__( (i,) )
+...   return resultTuple
+... 
+>>> 
+>>> a = zip( (1,2,3), (4,5,6), (7,8,9) )
+
+>>> ResultingTuple( a )
+((1, 4, 7), (2, 5, 8), (3, 6, 9))
+
+-----------
+
+# Below is a convenient way of using Python's for-construct (on iterables)
+
+>>> for a, b, c in ( (1, 2, 3), (4, 5, 6) ) :
+...   print( a, b, c )
+... 
+1 2 3
+4 5 6
+
+# Just to emphasize that Python's for-construct only works with iterables
+
+>>> ( (1, 2, 3), (4, 5, 6) ).__iter__()
+<tuple_iterator object at 0x7fc6501009d0>
+
+-----------
+
+####### Dictionary comprehension #######
+
+# Finally, we arrive at the (implicit) use of generator expressions for creating dictionaries.
+
+>>> subjects = ['ann', 'bob', 'charles']   # any iterable will do
+>>> ages = [23, 34, 45]                    # any iterable will do
+
+>>> aDict = { "Name is " + subject : "Age is " + str( age ) 
+              for subject, age in zip(subjects, ages)
+            }
+
+>>> aDict
+{'Name is ann': 'Age is 23', 'Name is bob': 'Age is 34', 'Name is charles': 'Age is 45'}
+
+# the needed translation can be ...
+
+def ResultingDict() :                   # 將'{ ... : ... for ... }'翻譯成'( ( ..., ... ) for ... )'、置於底下
+  resultDict = dict()
+  for key, value in ( ( "Name is " + subject, "Age is " + str( age ) ) for subject, age in zip(subjects, ages) ) :
+    resultDict.update( { key : value } )
+  return resultDict
+
+aDict = ResultingDict()                 # 然後將'{ ... }'翻譯成「呼叫此function」
+
+>>> def ResultingDict() :
+...   resultDict = dict()
+...   for key, value in ( ( "Name is " + subject, "Age is " + str( age ) ) for subject, age in zip(subjects, ages) ) :
+...     resultDict.update( { key : value } )
+...   return resultDict
+... 
+>>> aDict = ResultingDict()
+
+>>> aDict
+{'Name is ann': 'Age is 23', 'Name is bob': 'Age is 34', 'Name is charles': 'Age is 45'}
+
+-------------------------------------------------------------------------------
+
+                                有關Python import
+
+1. 我們可以在(the fictitious) top level (module) 'import'，我們也可以在任何(real) module (之中) 'import'。
+
+2. 執行'import Module1'會導致(among other things)'Module1'裏的code(e.g., creating classes and functions、宣告names、and 建立bindings)被執行
+
+3. 系統在執行'import'時、必須要能找到「我們所要import的東西」，否則就是error (of course)。
+
+4. Default是try out所有'sys.path'所説的絕對路徑(absolute path)
+
+   e.g., 'import dir1.dir2.moduleXYZ' (或 'from dir1.dir2.moduleXYZ import *')
+         # recall Java-styled import ; e.g., import java.util.*
+         就是要系統依序try out 'sys.path'所説的絕對路徑(absolute path)
+         看哪一個絕對路徑之下有dir1這個目錄、而dir1之下又有dir2、而dir2之下有moduleXYZ這個檔案
+         一找到就import該模組(import the first one found)
+         找不到就是error
+
+5. 但也可直接告訴系統「我們所要import的東西」的(完整的)相對路徑(relative path)。 # Hmmm... 「完整的相對路徑」？？？
+   方法是：以'.'作為「我們所要import的東西」(的路徑)的開頭 ; 一個'.'是一個目錄(從本目錄開始、一步一步往上走)
+
+  # recall that Python理論上想要"對打"的"對手"是Unix/Linux (而非一般的程式語言如C/C++/C#/Java/Modula-3) ; 所以有'.'與'..'(與'...'與'....')的概念   
+  # Q : What does '.' and '..' mean in Unix/Linux???
+
+  .blablabla      : 本模組所在目錄之下的blablabla
+  ..blablabla     : 本模組所在目錄的parent目錄之下的blablabla
+  ...blablabla    : 本模組所在目錄的parent目錄的parent目錄之下的blablabla
+  ...dir1.dir2    : 本模組所在目錄的parent目錄的parent目錄之下的dir1之下的dir2
+  etc.
+
+[ Relative imports use leading dots. A single leading dot indicates a relative import, starting with the current package. Two
+or more leading dots indicate a relative import to the parent(s) of the current package, one level per dot after the first. For
+example, given the following package layout (reference.pdf, p. 60) ]
+
+假設檔案結構是
+
+package/
+  __init__.py
+  subpackage1/
+    __init__.py
+    moduleX.py
+    moduleY.py
+  subpackage2/
+    __init__.py
+    moduleZ.py
+  moduleA.py
+
+在moduleX.py 或 subpackage1/__init__.py 之中、我們可以寫以下的import statement
+
+from .moduleY import SomeEntity              # 從「本module所在目錄」之下的moduleY import SomeEntity
+from .moduleY import SomeEntity as Some
+from . import moduleY                        # 從「本module所在目錄(即本module所屬的package)」import moduleY
+from ..subpackage1 import moduleY            # 從「本module所在目錄的parent目錄之下的subpackage1這個目錄(這個package)」import moduleY
+from ..subpackage2.moduleZ import SomeEntity # 從「本module所在目錄的parent目錄之下的subpackage2這個目錄」之下的moduleZ import SomeEntity
+from ..moduleA import SomeEntity             # 從「本module所在目錄的parent目錄」之下的moduleZ import SomeEntity
+
+注意：
+
+要specify「我們所要import的東西」的(完整的)相對路徑、只能用'from ... import ...'這種寫法，而不能用'import XXX.YYY.ZZZ'這種寫法(即使是import .XXX.YYY.ZZZ或import ..X.Y.Z也不行)。一個小小原因：第二種寫法已被Python的implementation以「到'sys.path'所説的絕對路徑之中去找」的方式來作處理(reference.pdf, p. 60)
+
+==========================================
+
+'import aPackage.aSubpackage.aPackageOrModule' 此種寫法只能import一個package或module (不能import一個function或class或data)
+
+只有 'from aPackage.aSubpackage.ThirdOne import ...' 能import function或class或data (但也可用此種寫法import package或module！！！)
+
+==========================================
+
+有關'import aPackage' (而非'import aModule')
+
+Python名詞('submodule' and 'subpackage') :
+  Package (directory)下面的 Python-script-files (.py)叫作 'submodules'
+  Package (directory)下面的 package 叫作 'subpackage'
+
+Java :
+  只要是一個(我們要求Java系統要去看的)目錄(注意：.jar檔事實上是個目錄)、此目錄便會被Java system當作是一個package
+Python :
+  即使是一個我們要求Python系統要去看的目錄、目錄之下也必須要有一個__init__.py(即使是空的也無妨)才會被Python system當作是一個package
+
+Java :
+  在執行'java'或'javax'時我們(或系統本身)有specify一些.jar，每個.jar是個"directory structure in a file"，e.g., 'rt.jar'這個"directory"的"下面"有'java'與'javax'這兩個directories、而'java'這個directory下面又有'lang'與'util'這兩個directories、'util'這個directory下面又有'Vector.class'這個file, etc.  
+  ---
+  Java系統自己會在特定地點找幾個常用的.jar(如rt.jar)，如果我們希望要用到我們自己的.jar(如HsiaNB50Lib.jar、內含'CYICE'這個directory、其下又有ICEInputStream.class與CharObj.class與IntObj.class等)、就必須在(用javac)編譯Java程式與(用java)執行.class時加'-cp <path>/HsiaNB50Lib.jar;<其他directories或.jar的完整paths>'這個option。
+  ---
+  當我們在程式中寫'import java.util.Vector'或'import CYICE.*'時，系統就是在這些我們(或系統本身)所指定的.jar"下面"去試著找到我們要的.class。
+  ---
+  不過這只是個name qualification的issue。意思是：只要告訴系統相關的.jar(如rt.jar與HsiaNB50Lib.jar)的完整路徑，我們就可用'Vector'(如果有import java.util.Vector)或'java.util.Vector'(如果沒有import java.util.Vector)來使用Vector(其fully qualified name為java.util.Vector)這個class
+Python :
+  在sys.path中有specify一些paths，當系統要去找我們要求它找的.py時、它就是到這些paths所指定的direcgtories下面去找。
+  注意：sys.path所specify的是  --- 所有 ---  系統會去找的paths(也就是說、There are no other implicitly specified paths)
+  ---
+  如果我們希望要用到我們自己的.py(如StartUpScript.py)，我們就必須想辦法讓此.py所在的目錄的path出現於sys.path之中
+  ---
+  雖說'import aModule'基本上只是"跟系統打個招呼"(説我們要用到aModule裡面的東東)，但如果不寫'import aModule'、Python就會對'aModule.data1'或'aModule.Func1'的寫法不認帳、説它不知道這些entities的存在(雖然它事實上可能根本就能找到這些entities)
+  ---
+  Java沒有'import aPackage'這回事(Java是'import aPackage.aSubPackage.aJavaModule.*'或'import aPackage.aSubPackage.aJavaModule.aClass' ; 而且Java的import statement只是for name-qualification purpose而已，多少有點「只是裝飾用途」的味道)。
+  Python的'import aPackage'則是一個有其真實用意的東西，'import aPackage'這個指令本身並不會import aPackage中的任何.py！ 執行'import aPackage'只是導致位於aPackage這個目錄之下的__init__.py被執行、而這個__init__.py才是負責'import aPackage'會有什麼實質效果(亦即會import什麼)的東西 ; 也就是説、任何aPackage的設計者想要經由'import aPackage'(這個指令被執行)所達到的效果、他(她)都必須透過(自己放在)__init__.py之中的相關程式碼(的執行)來達成。
+  ---
+  一旦'import aPackage'被執行，原先的namespace之中就會出現'aPackage'這個name(這倒是一個純粹只是靠執行'import aPackage'這個指令而達成的效果)、而aPackage的namespace(即dir(aPackage))之中的東西才是真正被import進來(可以使用)的東西。至於aPackage的namespace之中到底會有什麼東西、這是由aPackage的__init__.py中的程式碼所決定。
+
+例一：
+
+假設檔案結構如下
+
+package1/
+  __init__.py
+  moduleA.py
+  moduleB.py
+
+又假設package1/__init__.py 的內容如下
+
+from .moduleA import F1    # '.moduleA' : 本檔案所在目錄之下的'moduleA'檔案
+from .moduleB import B1
+
+>>> import package1
+
+>>> package1.moduleA
+<module 'package1.moduleA' from '/tmp/imports/package1/moduleA.py'>
+
+>>> package1.moduleB
+<module 'package1.moduleB' from '/tmp/imports/package1/moduleB.py'>
+
+例二：
+
+假設檔案結構如下
+
+sound/                 # Top-level package
+
+  __init__.py          # Initialize the sound package
+
+  formats/             # Subpackage for file format conversions
+    __init__.py
+    wavread.py
+    wavwrite.py
+    aiffread.py
+    aiffwrite.py
+    auread.py
+    auwrite.py
+    ...
+
+  effects/             # Subpackage for sound effects
+    __init__.py
+    echo.py
+    surround.py
+    reverse.py
+    ...
+
+  filters/             # Subpackage for filters
+    __init__.py
+    equalizer.py
+    vocoder.py
+    karaoke.py
+    ...
+
+先
+
+import sound.effects.echo
+
+然後可以使用以下程式碼 (必須要使用fully qualified names)
+
+sound.effects.echo.echofilter(input, output, delay=0.7, atten=4)
+
+當然，如果將'import sound.effects.echo'改為
+
+from sound.effects import echo
+
+就可以使用以下程式碼
+
+echo.echofilter(input, output, delay=0.7, atten=4)
+
+或是將from sound.effects import echo改為
+
+from sound.effects.echo import echofilter
+
+就可以使用以下程式碼
+
+echofilter(input, output, delay=0.7, atten=4)
+
+其他須注意事項：
+
+假設檔案結構如下
+
+parent/
+  __init__.py
+  one/
+    __init__.py
+  two/
+    __init__.py
+  three/
+    __init__.py
+
+一開始的'import parent.one'會導致'parent/__init__.py'與'parent/one/__init__.py'這兩個__init__.py都被執行。之後的'import parent.two'只會導致'parent/two/__init__.py'這個__init__.py被執行
+
+-------------------------------------------------------------------------------
+
+   How do we specify an array (or linked list) of C-styled-structs in Python？
+
+The following examples all return a dictionary equal to {"one": 1, "two": 2, "three": 3} :
+
+>>> a = dict( one=1, two=2, three=3 )       # type cast as function call ...
+>>> b = { 'one': 1, 'two': 2, 'three': 3 }
+>>> c = dict( zip( ['one', 'two', 'three'], [1, 2, 3] ) )
+>>> d = dict( [ ('two', 2), ('one', 1), ('three', 3) ] )
+>>> e = dict( { 'three': 3, 'one': 1, 'two': 2 } )
+
+>>> a == b == c == d == e
+True
+
+# A long-time question by hsia :
+#    How do we specify an array (or linked list) of C-styled-structs in Python ???
+
+>>> b = [ { 'id' : '10827359', 'name': 'Tom', 'age' : 22, 'score' : 85 }, { 'id' : '10827372', 'name': 'Peter', 'age' : 23, 'score' : 70 } ]
+>>> b[1]['score'] = 75
+
+>>> b
+[{'id': '10827359', 'name': 'Tom', 'age': 22, 'score': 85}, {'id': '10827372', 'name': 'Peter', 'age': 23, 'score': 75}]
+
+>>> b[0], b[1] = b[1], b[0]
+
+>>> b
+[{'id': '10827372', 'name': 'Peter', 'age': 23, 'score': 75}, {'id': '10827359', 'name': 'Tom', 'age': 22, 'score': 85}]
+
+### ??? How about this ??? ###
+>>> a = { '10827359' : { 'name': 'Tom', 'age' : 22, 'score' : 85 }, '10827372': { 'name': 'Peter', 'age' : 23, 'score' : 70 }  }
+>>> a['10827372']['score'] = 75
+
+# Comments???
+
+-------------------------------------------------------------------------------
+
+                          Python doc-string
+
+>>> def F0412_1300( a : int, b : int ) -> int :
+...   '''
+...   This function is a test.
+...   It is accorded a docString to see its effects.
+...   '''
+...   return a + b
+... 
+>>> 
+
+>>> F0412_1300( 3, 5 )
+8
+
+>>> dir( F0412_1300 )
+['__annotations__', '__builtins__', '__call__', '__class__', '__closure__', '__code__', '__defaults__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__get__', '__getattribute__', '__getstate__', '__globals__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__kwdefaults__', '__le__', '__lt__', '__module__', '__name__', '__ne__', '__new__', '__qualname__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__']
+
+>>> F0412_1300.__call__( 3, 5 )
+8
+
+>>> F0412_1300.__doc__
+'\n  This function is a test.\n  It is accorded a docString to see its effects.\n  '
+
+>>> help( F0412_1300 )
+Help on function F0412_1300 in module __main__:
+
+F0412_1300(a: int, b: int) -> int
+    This function is a test.
+    It is accorded a docString to see its effects.
+(END)
+
+>>> def F0412_1330() :
+...   '''
+... Let's see whether the docString itself needs to be indented.
+... The guess is No,
+...   '''
+...   pass
+... 
+>>> 
+>>> help( F0412_1330 )
+Help on function F0412_1330 in module __main__:
+
+F0412_1330()
+    Let's see whether the docString itself needs to be indented.
+    The guess is No,
+(END)
+
+-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+--------------------------------- 閒暇時間 -------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+####### Revisiting Python's insistence of "No values, just objects!" #######
+
+# 其他有關【 '5' 與 '10.3' 與 '[23, "hi", (25, "hello"), [35,]]' 這些names 所bound to的"objects" 】也是一模一樣的道理。
+# (只是你以前(很可能)並不是用現在所揭櫫的思考方式來思考的...)
+
+# e.g., (just the examples we already saw before, plus some more ...)
+
+>>> (5).__abs__()
+5
+
+>>> 5.5.__ceil__()
+6
+>>> 5.5.__floor__()
+5
+>>> 5.5.__round__()
+6
+>>> 5.5.__trunc__()
+5
+>>> a = 5.5
+>>> a.__round__()
+6
+
+# it may be of some interest to note that until Python 3.4.3, it was still the case that only integer-objects had '__ceil__()' and '__floor__()' ( float-objects only had '__round__()' and '__trunc__()' ).
+
+--------------------- session with Python 3.4.3 --------------------
+
+>>> 5.5.__ceil__()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: 'float' object has no attribute '__ceil__'
+
+>>> dir( 5.5 )
+['__abs__', '__add__', '__bool__', '__class__', '__delattr__', '__dir__', '__divmod__', '__doc__', '__eq__', '__float__', '__floordiv__', '__format__', '__ge__', '__getattribute__', '__getformat__', '__getnewargs__', '__gt__', '__hash__', '__init__', '__int__', '__le__', '__lt__', '__mod__', '__mul__', '__ne__', '__neg__', '__new__', '__pos__', '__pow__', '__radd__', '__rdivmod__', '__reduce__', '__reduce_ex__', '__repr__', '__rfloordiv__', '__rmod__', '__rmul__', '__round__', '__rpow__', '__rsub__', '__rtruediv__', '__setattr__', '__setformat__', '__sizeof__', '__str__', '__sub__', '__subclasshook__', '__truediv__', '__trunc__', 'as_integer_ratio', 'conjugate', 'fromhex', 'hex', 'imag', 'is_integer', 'real']
+
+>>> dir( float )
+['__abs__', '__add__', '__bool__', '__class__', '__delattr__', '__dir__', '__divmod__', '__doc__', '__eq__', '__float__', '__floordiv__', '__format__', '__ge__', '__getattribute__', '__getformat__', '__getnewargs__', '__gt__', '__hash__', '__init__', '__int__', '__le__', '__lt__', '__mod__', '__mul__', '__ne__', '__neg__', '__new__', '__pos__', '__pow__', '__radd__', '__rdivmod__', '__reduce__', '__reduce_ex__', '__repr__', '__rfloordiv__', '__rmod__', '__rmul__', '__round__', '__rpow__', '__rsub__', '__rtruediv__', '__setattr__', '__setformat__', '__sizeof__', '__str__', '__sub__', '__subclasshook__', '__truediv__', '__trunc__', 'as_integer_ratio', 'conjugate', 'fromhex', 'hex', 'imag', 'is_integer', 'real']
+
+-------------------------------------------------------------------------------
+
+Q. : What does 'def F(...) : ...' mean, and what does 'class C[(...)] : ...' mean ?
+
+A. : (the evaluation of) 'def F(...) : ...' creates a function object and binds the name 'F' to this function object.
+
+     Similarly, (the evaluation of) 'class C[(...)] : ...' creates a class object and binds the name 'C' to this class object.
+
+-------------------------------------------------------------------------------
+
+# vars( anInstance )             OR    dict( vars( SomeClass ))   OR  vars( SomeModule )
+
+# sorted( vars( anInstance ) )   OR    sorted( vars( SomeClass )) OR  sorted( vars( SomeModule ))
+  vs.
+# dir( anInstance )              OR    dir( SomeClass )           OR  dir( SomeModule )
+
+# if 'vars()' or 'dir()' is called with no argument, then what is referred to is the current top-level "module"
+
+dir( <傢伙> ) : 這傢伙的namespace之中  有這些names存在  (尤其要注意雙底線開頭與雙底線結尾者、這些傢伙具有特殊意義者)
+
+vars( <傢伙> ) : 這傢伙的namespace之中  由它自己所宣告的names (亦即：這傢伙的symbol table的內容)
+                # vars( <傢伙> )只是列出此傢伙的__dict__ ( = 此傢伙的symbol table (用以儲存namespace之中目前真正有的(已宣告的) ) 的內容  而已
+
+亦即：  ( "傢伙" df= AnInstance 或 SomeClass 或 SomeModule )
+
+  此傢伙的"namespace" ( 此傢伙的dir()所得之結果 )     =  此傢伙可用之names (可呼叫的functions與可reference的data)
+
+  此傢伙的"symbol-table" ( 此傢伙的vars()所得之結果 ) =  此傢伙自己所宣告( '='或':='或'def' )之names = 專屬於此傢伙自己的names (存於其__dict__之中)
+
+  # vars( <傢伙> )  是  dir( <傢伙> ) 的子集合
+
+# 每個instance、class/type、module都有一個"symbol table" (存於其__dict__之中) 
+# "Symbol table"的內容是永久性的 (if it is not associated with an instance)  # Instance只要存在、其"symbol table"當然也是永久性
+# Function definition也有一個"symbol table"，但"instance of function call"沒有！  
+# "Instance of function call"有的    ---是---    activation record！
+
+# Note :
+#   A function-definition is an object in its own right. 
+#   Therefore, a function-definition's attributes (see 'dir( F )') may not have to do with 「此function(的code body)之中可以用的names」
+
+>>> dir(F3)
+['__annotations__', '__builtins__', '__call__', '__class__', '__closure__', '__code__', '__defaults__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__get__', '__getattribute__', '__getstate__', '__globals__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__kwdefaults__', '__le__', '__lt__', '__module__', '__name__', '__ne__', '__new__', '__qualname__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__']
+
+>>> sorted( vars( F3))
+[]
+
+>>> F3.__call__()
+335
+335
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "<stdin>", line 14, in F3
+  File "<stdin>", line 13, in F31
+  File "<stdin>", line 8, in F312
+UnboundLocalError: cannot access local variable 'a333' where it is not associated with a value
+
+
+
+
+# Note to the instructor :
+#   An introduction of the difference and relation between "symbol tables" (and their associated "namespaces") and activation-records in Python is appropriate/necessary at this point ！！！
+
+
+
+
+# Relevant system-level commands
+
+dir( x )
+help( x.whatever )    # to exit the interaction with help(), press 'q'
+
+type( x )
+help( TypeOfX.whatever )
+
+vars( x )    OR   sorted( dict( vars( x )))
+
+# Examples :
+
+>>> help( (5).bit_count )
+>>> help( x.index )        # 'x' is a list ; we know it has 'index' after we run 'dir(x)'
+>>> help( (4.3).__abs__ )
+
+>>> (4.3).__abs__( )
+>>> (4.3).__ceil__( )
+>>> (4.3).__ne__( 4.3 )
+
+-------------------------------------------------------------------------------
+
+###########################################
+########### Let out the beast！ ###########
+###########################################
+
+> python3.11
+Python 3.11.1 (main, Dec 23 2022, 09:25:32) [Clang 13.0.0 (clang-1300.0.29.30)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+
+>>> import os, sys
+
+>>> sys.path
+['', '<HOME-DIR>/bin', '<HOME-DIR>/PythonProj/Testing', '/opt/homebrew/Cellar/python@3.11/3.11.1/Frameworks/Python.framework/Versions/3.11/lib/python311.zip', '/opt/homebrew/Cellar/python@3.11/3.11.1/Frameworks/Python.framework/Versions/3.11/lib/python3.11', '/opt/homebrew/Cellar/python@3.11/3.11.1/Frameworks/Python.framework/Versions/3.11/lib/python3.11/lib-dynload', '<HOME-DIR>/Library/Python/3.11/lib/python/site-packages', '/opt/homebrew/lib/python3.11/site-packages']
+
+>>> dir()     # names that exist in the "namespace" of this "top-level (module)"
+['__annotations__', '__builtins__', '__doc__', '__loader__', '__name__', '__package__', '__spec__', 'os', 'sys']
+ 
+>>> vars()    # symbole table of this top-level "module"
+{'__name__': '__main__', '__doc__': None, '__package__': None, '__loader__': <class '_frozen_importlib.BuiltinImporter'>, '__spec__': None, '__annotations__': {}, '__builtins__': <module 'builtins' (built-in)>, 'os': <module 'os' (frozen)>, 'sys': <module 'sys' (built-in)>}
+ 
+>>> sorted( vars() )
+['__annotations__', '__builtins__', '__doc__', '__loader__', '__name__', '__package__', '__spec__', 'os', 'sys']
+
+# so, for our top-level "module" at least, its "namespace" contains what it has declared (and stored in its symbol table)
+
+# let us now see what the values of these globals are
+
+>>> __annotations__
+{}
+
+>>> __builtins__
+<module 'builtins' (built-in)>
+
+>>> __doc__
+>>> 
+
+# the above shows that the value of '__doc__' is 'None' (i.e., it does have a value ; it is just that its value is 'None')
+
+# you can use 'vars()' to confirm this
+
+>>> None   # just to be sure (the evaluation of 'None' is empty)
+>>> 4      # just to be sure (the evaluation of '4' is '4')
+4
+
+>>> eval( "None" )
+>>> eval( "4" )
+4
+
+# For those who wrote or are writting PL projects, the above should remind you of something ...
+
+>>> __loader__
+<class '_frozen_importlib.BuiltinImporter'>
+
+>>> __name__
+'__main__'
+
+>>> __package__
+
+>>> __spec__
+
+# a simple recap : 
+#   the top-level (a fictitious "module") is accorded (by the Python system) a "symbol table" (a dict) from the start, many of the data contained in this "symbol table" are defaulted to be 'None'
+
+# you can use 'import StartUpScript as sos ; sos.pprint( vars() )' to see it more clearly.
+
+# we now use functions and class instances to reference these module-globals
+
+>>> def F() :
+...   print( __annotations__ )
+...   print( __name__ )
+... 
+>>>
+
+>>> class C :
+...   def F( self ) :
+...     print( __annotations__ )
+...     print( __name__ )
+...   
+...   def G() :
+...     print( __annotations__ )
+...     print( __name__ )
+... 
+>>>
+
+>>> aClassC = C()
+
+>>> aClassC.F()
+{}
+__main__
+
+>>> C.G()
+{}
+__main__
+
+>>> F()
+{}
+__main__
+
+# What about our marvelous module 'StartUpScript.py'
+
+>>> import StartUpScript as sos    # instead of 'from StartUpScript import *' ; just trying to make things clearer
+
+>>> sos.B( 'pwd' )
+<HOME-DIR>/PythonProj/Testing
+
+>>> sos.B( 'echo $PYTHONPATH' )    # this is the reason why we have '<HOME-DIR>/bin' in sys.path
+<HOME-DIR>/bin:
+
+>>> sos.B( 'ls ~/bin' )            # this is why we were able to 'import StartUpScript' in the above
+Date			PyTest01.py		StartUpScript.py	__pycache__		argParseProg03Out
+PyCharmCommon.py	PyTest02.py		Temp			argParseProg03In
+
+>>> dir( sos )                     # just to recall what we have in the module named 'StartUpScript' (its alias is 'sos' here)
+['B', 'S', '__builtins__', '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__spec__', 'os', 'pprint', 'subprocess', 'sys']
+
+>>> sorted( vars( sos ))           # the symbol table of this module
+['B', 'S', '__builtins__', '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__spec__', 'os', 'pprint', 'subprocess', 'sys']
+
+# so, as it seems, the namespace of the module 'StartUpScript' contains exactly what it has in its symbol table
+
+# what about the object named 'aClassC' (an instance of the class 'ClassC')
+
+>>> dir( aClassC ) # names that the object named 'aClassC' can directly access (note the use of '__' before and after each name)
+['F', 'G', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__']
+
+>>> sorted( vars( aClassC ))       # symbol table of the object named 'aClassC'
+[]
+
+# indeed, the object named 'aClassC' did not declare anything in its own "namespace"
+# therefore, for 'aClassC' at least, everything in its "namespace" either comes from its class (and ancestor classes?) or system defaults
+
+>>> aClassC.__class__
+<class '__main__.C'>
+
+>>> aClassC.__module__
+'__main__'
+
+# The "module" named '__main__' : 
+#     a fictitious module ; we refer to it as 「our top-level "module"」 ; it is also known as "the top level"
+# 
+# Every module has a name (the value of its __name__ attribute) ; our fictitious top-level "module" is named '__main__'
+# Here, the class 'C' is a class defined in this (fictitious) top-level "module"
+
+>>> __name__
+'__main__'
+
+>>> help( aClassC.__sizeof__ )    # to exit the interaction with help(), press 'q'
+
+       Help on built-in function __sizeof__:
+
+       __sizeof__() method of __main__.C instance
+           Size of object in memory, in bytes.
+
+>>> aClassC.__sizeof__()
+24
+
+# what do we have in our top-level "module" now 
+
+>>> dir()
+['C', 'F', '__annotations__', '__builtins__', '__doc__', '__loader__', '__name__', '__package__', '__spec__', 'aClassC', 'os', 'sos', 'sys']
+
+>>> sorted( vars() )
+['C', 'F', '__annotations__', '__builtins__', '__doc__', '__loader__', '__name__', '__package__', '__spec__', 'aClassC', 'os', 'sos', 'sys']
+
+# recall that our top-level "module" is named '__main__'
+# we now show that every module (including our top-level, fictitious "module") has a name
+
+>>> sos.__name__
+'StartUpScript'
+
+>>> sys.__name__
+'sys'
+
+-------------------------------------------------------------------------------
+
+        Learning about how a function works and how to use it properly
+
+>>> dir( str )
+['__add__', '__class__', '__contains__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getnewargs__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__mod__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmod__', '__rmul__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'capitalize', 'casefold', 'center', 'count', 'encode', 'endswith', 'expandtabs', 'find', 'format', 'format_map', 'index', 'isalnum', 'isalpha', 'isascii', 'isdecimal', 'isdigit', 'isidentifier', 'islower', 'isnumeric', 'isprintable', 'isspace', 'istitle', 'isupper', 'join', 'ljust', 'lower', 'lstrip', 'maketrans', 'partition', 'removeprefix', 'removesuffix', 'replace', 'rfind', 'rindex', 'rjust', 'rpartition', 'rsplit', 'rstrip', 'split', 'splitlines', 'startswith', 'strip', 'swapcase', 'title', 'translate', 'upper', 'zfill']
+
+>>> help( str.split )
+Help on method_descriptor:
+
+split(self, /, sep=None, maxsplit=-1)
+    Return a list of the substrings in the string, using sep as the separator string.
+
+      sep
+        The separator used to split the string.
+
+        When set to None (the default value), will split on any whitespace
+        character (including \\n \\r \\t \\f and spaces) and will discard
+        empty strings from the result.
+      maxsplit
+        Maximum number of splits (starting from the left).
+        -1 (the default value) means no limit.
+
+    Note, str.split() is mainly useful for data that has been intentionally
+    delimited.  With natural text that includes punctuation, consider using
+    the regular expression module.
+(END)
+
+>>> "help is on its way".split( sep='s' )
+['help i', ' on it', ' way']
+
+>>> _   # idea is from '$?' of Unix/Linux (return value of the last command executed)
+['help i', ' on it', ' way']
+
+>>> help( list.sort )
+Help on method_descriptor:
+
+sort(self, /, *, key=None, reverse=False)
+    Sort the list in ascending order and return None.
+
+    The sort is in-place (i.e. the list itself is modified) and stable (i.e. the
+    order of two equal elements is maintained).
+
+    If a key function is given, apply it once to each list item and sort them,
+    ascending or descending, according to their function values.
+
+    The reverse flag can be set to sort in descending order.
+(END)
+
+>>> "help is on its way".split( sep='s' ).sort()
+>>> # (the prompt appears) i.e., no output ... 
+
+-------------------------------------------------------------------------------
+
+            What are the other types that we have?
+
+From reference.pdf, pp. 18-25
+
+Standard type hierarchy   # 'type' is synonymous to 'class'
+
+None (NoneType)
+NotImplemented (NotImplementedType)
+... or Ellipsis (ellipsis)
+numbers.Number (<class 'abc.ABCMeta'>)
+  numbers.Integral
+    Integers (int)
+    Booleans (bool)
+  numbers.Real (float)
+  numbers.Complex (complex)
+Sequences
+  Immutable sequences
+    Strings (str)
+    Tuples (tuple)
+    Bytes (bytes)
+  Mutable sequences
+    Lists (list)
+    Byte Arrays (bytearray)
+Set types
+  Sets
+  Frozen sets
+Mappings
+  Dictionaries
+Callable types
+  User-defined functions
+  Instance methods
+  Generator functions
+  Coroutine functions
+  Asynchronous generator functions
+  Built-in functions
+  Nuilt-in methods
+  Classes
+  Class instances
+Modules
+Custom classes
+Class instances
+I/O objects (file objects)
+Internal types
+  Code objects
+  Frame objects
+  Traceback objects
+  Slice objects
+  Static method objects
+  Class method objects
+
+From library.pdf, p. i
+
+Built-in Types
+4.1 Truth Value Testing
+4.2 Boolean Operations — and, or, not
+4.3 Comparisons
+4.4 Numeric Types — int, float, complex
+4.5 Iterator Types      ### iter
+4.6 Sequence Types — list, tuple, range
+4.7 Text Sequence Type — str
+4.8 Binary Sequence Types — bytes, bytearray, memoryview
+4.9 Set Types — set, frozenset
+4.10 Mapping Types — dict
+4.11 Context Manager Types
+4.12 Other Built-in Types
+4.13 Special Attributes
+
+-------------------------------------------------------------------------------
+
+Question : 
+
+You have a module object or a class object or a function object or an instance object that has some functions listed in its __dict__. Can you use them? How do you use them? How to find out about the way to use them? What exactly are the ones you can use and you cannot use and why?
+
+>>> dir( sys )
+['__breakpointhook__', '__displayhook__', '__doc__', '__excepthook__', '__interactivehook__', '__loader__', '__name__', '__package__', '__spec__', '__stderr__', '__stdin__', '__stdout__', '__unraisablehook__', '_base_executable', '_clear_type_cache', '_current_exceptions', '_current_frames', '_debugmallocstats', '_framework', '_getframe', '_getquickenedcount', '_git', '_home', '_stdlib_dir', '_xoptions', 'abiflags', 'addaudithook', 'api_version', 'argv', 'audit', 'base_exec_prefix', 'base_prefix', 'breakpointhook', 'builtin_module_names', 'byteorder', 'call_tracing', 'copyright', 'displayhook', 'dont_write_bytecode', 'exc_info', 'excepthook', 'exception', 'exec_prefix', 'executable', 'exit', 'flags', 'float_info', 'float_repr_style', 'get_asyncgen_hooks', 'get_coroutine_origin_tracking_depth', 'get_int_max_str_digits', 'getallocatedblocks', 'getdefaultencoding', 'getdlopenflags', 'getfilesystemencodeerrors', 'getfilesystemencoding', 'getprofile', 'getrecursionlimit', 'getrefcount', 'getsizeof', 'getswitchinterval', 'gettrace', 'hash_info', 'hexversion', 'implementation', 'int_info', 'intern', 'is_finalizing', 'last_traceback', 'last_type', 'last_value', 'maxsize', 'maxunicode', 'meta_path', 'modules', 'orig_argv', 'path', 'path_hooks', 'path_importer_cache', 'platform', 'platlibdir', 'prefix', 'ps1', 'ps2', 'pycache_prefix', 'set_asyncgen_hooks', 'set_coroutine_origin_tracking_depth', 'set_int_max_str_digits', 'setdlopenflags', 'setprofile', 'setrecursionlimit', 'setswitchinterval', 'settrace', 'stderr', 'stdin', 'stdlib_module_names', 'stdout', 'thread_info', 'unraisablehook', 'version', 'version_info', 'warnoptions']
+
+
+>>> dir( os )
+['CLD_CONTINUED', 'CLD_DUMPED', 'CLD_EXITED', 'CLD_KILLED', 'CLD_STOPPED', 'CLD_TRAPPED', 'DirEntry', 'EX_CANTCREAT', 'EX_CONFIG', 'EX_DATAERR', 'EX_IOERR', 'EX_NOHOST', 'EX_NOINPUT', 'EX_NOPERM', 'EX_NOUSER', 'EX_OK', 'EX_OSERR', 'EX_OSFILE', 'EX_PROTOCOL', 'EX_SOFTWARE', 'EX_TEMPFAIL', 'EX_UNAVAILABLE', 'EX_USAGE', 'F_LOCK', 'F_OK', 'F_TEST', 'F_TLOCK', 'F_ULOCK', 'GenericAlias', 'Mapping', 'MutableMapping', 'NGROUPS_MAX', 'O_ACCMODE', 'O_APPEND', 'O_ASYNC', 'O_CLOEXEC', 'O_CREAT', 'O_DIRECTORY', 'O_DSYNC', 'O_EVTONLY', 'O_EXCL', 'O_EXLOCK', 'O_FSYNC', 'O_NDELAY', 'O_NOCTTY', 'O_NOFOLLOW', 'O_NOFOLLOW_ANY', 'O_NONBLOCK', 'O_RDONLY', 'O_RDWR', 'O_SHLOCK', 'O_SYMLINK', 'O_SYNC', 'O_TRUNC', 'O_WRONLY', 'POSIX_SPAWN_CLOSE', 'POSIX_SPAWN_DUP2', 'POSIX_SPAWN_OPEN', 'PRIO_PGRP', 'PRIO_PROCESS', 'PRIO_USER', 'P_ALL', 'P_NOWAIT', 'P_NOWAITO', 'P_PGID', 'P_PID', 'P_WAIT', 'PathLike', 'RTLD_GLOBAL', 'RTLD_LAZY', 'RTLD_LOCAL', 'RTLD_NODELETE', 'RTLD_NOLOAD', 'RTLD_NOW', 'R_OK', 'SCHED_FIFO', 'SCHED_OTHER', 'SCHED_RR', 'SEEK_CUR', 'SEEK_DATA', 'SEEK_END', 'SEEK_HOLE', 'SEEK_SET', 'ST_NOSUID', 'ST_RDONLY', 'TMP_MAX', 'WCONTINUED', 'WCOREDUMP', 'WEXITED', 'WEXITSTATUS', 'WIFCONTINUED', 'WIFEXITED', 'WIFSIGNALED', 'WIFSTOPPED', 'WNOHANG', 'WNOWAIT', 'WSTOPPED', 'WSTOPSIG', 'WTERMSIG', 'WUNTRACED', 'W_OK', 'X_OK', '_Environ', '__all__', '__builtins__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__spec__', '_check_methods', '_execvpe', '_exists', '_exit', '_fspath', '_fwalk', '_get_exports_list', '_spawnvef', '_walk', '_wrap_close', 'abc', 'abort', 'access', 'altsep', 'chdir', 'chflags', 'chmod', 'chown', 'chroot', 'close', 'closerange', 'confstr', 'confstr_names', 'cpu_count', 'ctermid', 'curdir', 'defpath', 'device_encoding', 'devnull', 'dup', 'dup2', 'environ', 'environb', 'error', 'execl', 'execle', 'execlp', 'execlpe', 'execv', 'execve', 'execvp', 'execvpe', 'extsep', 'fchdir', 'fchmod', 'fchown', 'fdopen', 'fork', 'forkpty', 'fpathconf', 'fsdecode', 'fsencode', 'fspath', 'fstat', 'fstatvfs', 'fsync', 'ftruncate', 'fwalk', 'get_blocking', 'get_exec_path', 'get_inheritable', 'get_terminal_size', 'getcwd', 'getcwdb', 'getegid', 'getenv', 'getenvb', 'geteuid', 'getgid', 'getgrouplist', 'getgroups', 'getloadavg', 'getlogin', 'getpgid', 'getpgrp', 'getpid', 'getppid', 'getpriority', 'getsid', 'getuid', 'initgroups', 'isatty', 'kill', 'killpg', 'lchflags', 'lchmod', 'lchown', 'linesep', 'link', 'listdir', 'lockf', 'login_tty', 'lseek', 'lstat', 'major', 'makedev', 'makedirs', 'minor', 'mkdir', 'mkfifo', 'mknod', 'name', 'nice', 'open', 'openpty', 'pardir', 'path', 'pathconf', 'pathconf_names', 'pathsep', 'pipe', 'popen', 'posix_spawn', 'posix_spawnp', 'pread', 'preadv', 'putenv', 'pwrite', 'pwritev', 'read', 'readlink', 'readv', 'register_at_fork', 'remove', 'removedirs', 'rename', 'renames', 'replace', 'rmdir', 'scandir', 'sched_get_priority_max', 'sched_get_priority_min', 'sched_yield', 'sendfile', 'sep', 'set_blocking', 'set_inheritable', 'setegid', 'seteuid', 'setgid', 'setgroups', 'setpgid', 'setpgrp', 'setpriority', 'setregid', 'setreuid', 'setsid', 'setuid', 'spawnl', 'spawnle', 'spawnlp', 'spawnlpe', 'spawnv', 'spawnve', 'spawnvp', 'spawnvpe', 'st', 'stat', 'stat_result', 'statvfs', 'statvfs_result', 'strerror', 'supports_bytes_environ', 'supports_dir_fd', 'supports_effective_ids', 'supports_fd', 'supports_follow_symlinks', 'symlink', 'sync', 'sys', 'sysconf', 'sysconf_names', 'system', 'tcgetpgrp', 'tcsetpgrp', 'terminal_size', 'times', 'times_result', 'truncate', 'ttyname', 'umask', 'uname', 'uname_result', 'unlink', 'unsetenv', 'urandom', 'utime', 'wait', 'wait3', 'wait4', 'waitpid', 'waitstatus_to_exitcode', 'walk', 'write', 'writev']
+
+# a simple illustration (again)
+
+>>> os.walk         # first, see whether it is a variable or a function
+<function walk at 0x1011158a0>
+
+>>> help( os.walk ) # then, see its descriptioon (what it is and how to call it if it is a funciton)
+Help on function walk in module os:
+
+walk(top, topdown=True, onerror=None, followlinks=False)
+    Directory tree generator.
+    
+    For each directory in the directory tree rooted at top (including top
+    itself, but excluding '.' and '..'), yields a 3-tuple
+    
+        dirpath, dirnames, filenames
+    
+    dirpath is a string, the path to the directory.  dirnames is a list of
+    the names of the subdirectories in dirpath (including symlinks to directories,
+    and excluding '.' and '..').
+    filenames is a list of the names of the non-directory files in dirpath.
+...
+
+>>> os.walk( '/' )  # try it out
+<generator object _walk at 0x101b18490>
+
+>>> # for i in os.walk( '/' ) : print( i ) ### this will print everything on the directory tree of your system (use Ctrl-c to interrupt)
+
+----------------------
+
+>>> sos.pprint( testFC.__builtins__ )           
+{'ArithmeticError': <class 'ArithmeticError'>,
+ 'AssertionError': <class 'AssertionError'>,
+ 'AttributeError': <class 'AttributeError'>,
+ 'BaseException': <class 'BaseException'>,
+ 'BaseExceptionGroup': <class 'BaseExceptionGroup'>,
+ 'BlockingIOError': <class 'BlockingIOError'>,
+ 'BrokenPipeError': <class 'BrokenPipeError'>,
+ 'BufferError': <class 'BufferError'>,
+ 'BytesWarning': <class 'BytesWarning'>,
+ 'ChildProcessError': <class 'ChildProcessError'>,
+ 'ConnectionAbortedError': <class 'ConnectionAbortedError'>,
+ 'ConnectionError': <class 'ConnectionError'>,
+ 'ConnectionRefusedError': <class 'ConnectionRefusedError'>,
+ 'ConnectionResetError': <class 'ConnectionResetError'>,
+ 'DeprecationWarning': <class 'DeprecationWarning'>,
+ 'EOFError': <class 'EOFError'>,
+ 'Ellipsis': Ellipsis,
+ 'EncodingWarning': <class 'EncodingWarning'>,
+ 'EnvironmentError': <class 'OSError'>,
+ 'Exception': <class 'Exception'>,
+ 'ExceptionGroup': <class 'ExceptionGroup'>,
+ 'False': False,
+ 'FileExistsError': <class 'FileExistsError'>,
+ 'FileNotFoundError': <class 'FileNotFoundError'>,
+ 'FloatingPointError': <class 'FloatingPointError'>,
+ 'FutureWarning': <class 'FutureWarning'>,
+ 'GeneratorExit': <class 'GeneratorExit'>,
+ 'IOError': <class 'OSError'>,
+ 'ImportError': <class 'ImportError'>,
+ 'ImportWarning': <class 'ImportWarning'>,
+ 'IndentationError': <class 'IndentationError'>,
+ 'IndexError': <class 'IndexError'>,
+ 'InterruptedError': <class 'InterruptedError'>,
+ 'IsADirectoryError': <class 'IsADirectoryError'>,
+ 'KeyError': <class 'KeyError'>,
+ 'KeyboardInterrupt': <class 'KeyboardInterrupt'>,
+ 'LookupError': <class 'LookupError'>,
+ 'MemoryError': <class 'MemoryError'>,
+ 'ModuleNotFoundError': <class 'ModuleNotFoundError'>,
+ 'NameError': <class 'NameError'>,
+ 'None': None,
+ 'NotADirectoryError': <class 'NotADirectoryError'>,
+ 'NotImplemented': NotImplemented,
+ 'NotImplementedError': <class 'NotImplementedError'>,
+ 'OSError': <class 'OSError'>,
+ 'OverflowError': <class 'OverflowError'>,
+ 'PendingDeprecationWarning': <class 'PendingDeprecationWarning'>,
+ 'PermissionError': <class 'PermissionError'>,
+ 'ProcessLookupError': <class 'ProcessLookupError'>,
+ 'RecursionError': <class 'RecursionError'>,
+ 'ReferenceError': <class 'ReferenceError'>,
+ 'ResourceWarning': <class 'ResourceWarning'>,
+ 'RuntimeError': <class 'RuntimeError'>,
+ 'RuntimeWarning': <class 'RuntimeWarning'>,
+ 'StopAsyncIteration': <class 'StopAsyncIteration'>,
+ 'StopIteration': <class 'StopIteration'>,
+ 'SyntaxError': <class 'SyntaxError'>,
+ 'SyntaxWarning': <class 'SyntaxWarning'>,
+ 'SystemError': <class 'SystemError'>,
+ 'SystemExit': <class 'SystemExit'>,
+ 'TabError': <class 'TabError'>,
+ 'TimeoutError': <class 'TimeoutError'>,
+ 'True': True,
+ 'TypeError': <class 'TypeError'>,
+ 'UnboundLocalError': <class 'UnboundLocalError'>,
+ 'UnicodeDecodeError': <class 'UnicodeDecodeError'>,
+ 'UnicodeEncodeError': <class 'UnicodeEncodeError'>,
+ 'UnicodeError': <class 'UnicodeError'>,
+ 'UnicodeTranslateError': <class 'UnicodeTranslateError'>,
+ 'UnicodeWarning': <class 'UnicodeWarning'>,
+ 'UserWarning': <class 'UserWarning'>,
+ 'ValueError': <class 'ValueError'>,
+ 'Warning': <class 'Warning'>,
+ 'ZeroDivisionError': <class 'ZeroDivisionError'>,
+ '_': ['help i', ' on it', ' way'],              # <--------------------- last output
+ '__build_class__': <built-in function __build_class__>,
+ '__debug__': True,
+ '__doc__': 'Built-in functions, exceptions, and other objects.\n'
+            '\n'
+            "Noteworthy: None is the `nil' object; Ellipsis represents `...' "
+            'in slices.',
+ '__import__': <built-in function __import__>,
+ '__loader__': <class '_frozen_importlib.BuiltinImporter'>,
+ '__name__': 'builtins',
+ '__package__': '',
+ '__spec__': ModuleSpec(name='builtins', loader=<class '_frozen_importlib.BuiltinImporter'>, origin='built-in'),
+ 'abs': <built-in function abs>,
+ 'aiter': <built-in function aiter>,
+ 'all': <built-in function all>,
+ 'anext': <built-in function anext>,
+ 'any': <built-in function any>,
+ 'ascii': <built-in function ascii>,
+ 'bin': <built-in function bin>,
+ 'bool': <class 'bool'>,
+ 'breakpoint': <built-in function breakpoint>,
+ 'bytearray': <class 'bytearray'>,
+ 'bytes': <class 'bytes'>,
+ 'callable': <built-in function callable>,
+ 'chr': <built-in function chr>,
+ 'classmethod': <class 'classmethod'>,
+ 'compile': <built-in function compile>,
+ 'complex': <class 'complex'>,
+ 'copyright': Copyright (c) 2001-2022 Python Software Foundation.
+All Rights Reserved.
+
+Copyright (c) 2000 BeOpen.com.
+All Rights Reserved.
+
+Copyright (c) 1995-2001 Corporation for National Research Initiatives.
+All Rights Reserved.
+
+Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.
+All Rights Reserved.,
+ 'credits':     Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
+    for supporting Python development.  See www.python.org for more information.,
+ 'delattr': <built-in function delattr>,
+ 'dict': <class 'dict'>,
+ 'dir': <built-in function dir>,
+ 'divmod': <built-in function divmod>,
+ 'enumerate': <class 'enumerate'>,
+ 'eval': <built-in function eval>,
+ 'exec': <built-in function exec>,
+ 'exit': Use exit() or Ctrl-D (i.e. EOF) to exit,
+ 'filter': <class 'filter'>,
+ 'float': <class 'float'>,
+ 'format': <built-in function format>,
+ 'frozenset': <class 'frozenset'>,
+ 'getattr': <built-in function getattr>,
+ 'globals': <built-in function globals>,
+ 'hasattr': <built-in function hasattr>,
+ 'hash': <built-in function hash>,
+ 'help': Type help() for interactive help, or help(object) for help about object.,
+ 'hex': <built-in function hex>,
+ 'id': <built-in function id>,
+ 'input': <built-in function input>,
+ 'int': <class 'int'>,
+ 'isinstance': <built-in function isinstance>,
+ 'issubclass': <built-in function issubclass>,
+ 'iter': <built-in function iter>,
+ 'len': <built-in function len>,
+ 'license': Type license() to see the full license text,
+ 'list': <class 'list'>,
+ 'locals': <built-in function locals>,
+ 'map': <class 'map'>,
+ 'max': <built-in function max>,
+ 'memoryview': <class 'memoryview'>,
+ 'min': <built-in function min>,
+ 'next': <built-in function next>,
+ 'object': <class 'object'>,
+ 'oct': <built-in function oct>,
+ 'open': <built-in function open>,
+ 'ord': <built-in function ord>,
+ 'pow': <built-in function pow>,
+ 'print': <built-in function print>,
+ 'property': <class 'property'>,
+ 'quit': Use quit() or Ctrl-D (i.e. EOF) to exit,
+ 'range': <class 'range'>,
+ 'repr': <built-in function repr>,
+ 'reversed': <class 'reversed'>,
+ 'round': <built-in function round>,
+ 'set': <class 'set'>,
+ 'setattr': <built-in function setattr>,
+ 'slice': <class 'slice'>,
+ 'sorted': <built-in function sorted>,
+ 'staticmethod': <class 'staticmethod'>,
+ 'str': <class 'str'>,
+ 'sum': <built-in function sum>,
+ 'super': <class 'super'>,
+ 'tuple': <class 'tuple'>,
+ 'type': <class 'type'>,
+ 'vars': <built-in function vars>,
+ 'zip': <class 'zip'>}
+
+-------------------------------------------------------------------------------
+
+ How can we find the modules that already exist in our library (of Python modules).
+
+>>> sys.path
+['', '<HOME-DIR>/bin', '<HOME-DIR>/PythonProj/Testing', '/opt/homebrew/Cellar/python@3.11/3.11.1/Frameworks/Python.framework/Versions/3.11/lib/python311.zip', '/opt/homebrew/Cellar/python@3.11/3.11.1/Frameworks/Python.framework/Versions/3.11/lib/python3.11', '/opt/homebrew/Cellar/python@3.11/3.11.1/Frameworks/Python.framework/Versions/3.11/lib/python3.11/lib-dynload', '<HOME-DIR>/Library/Python/3.11/lib/python/site-packages', '/opt/homebrew/lib/python3.11/site-packages']
+
+# Below, we can find many of the Python modules described in library.pdf (e.g., pp. 95-1858, library.pdf, version 3.7.4)
+
+>>> sos.B( 'ls /opt/homebrew/Cellar/python@3.11/3.11.1/Frameworks/Python.framework/Versions/3.11/lib/python3.11' )
+LICENSE.txt				fnmatch.py				rlcompleter.py
+__future__.py				fractions.py				runpy.py
+__hello__.py				ftplib.py				sched.py
+__phello__				functools.py				secrets.py
+__pycache__				genericpath.py				selectors.py
+_aix_support.py				getopt.py				shelve.py
+_bootsubprocess.py			getpass.py				shlex.py
+_collections_abc.py			gettext.py				shutil.py
+_compat_pickle.py			glob.py					signal.py
+_compression.py				graphlib.py				site-packages
+_markupbase.py				gzip.py					site.py
+_osx_support.py				hashlib.py				sitecustomize.py
+_py_abc.py				heapq.py				smtpd.py
+_pydecimal.py				hmac.py					smtplib.py
+_pyio.py				html					sndhdr.py
+_sitebuiltins.py			http					socket.py
+_strptime.py				idlelib					socketserver.py
+_sysconfigdata__darwin_darwin.py	imaplib.py				sqlite3
+_threading_local.py			imghdr.py				sre_compile.py
+_weakrefset.py				imp.py					sre_constants.py
+abc.py					importlib				sre_parse.py
+aifc.py					inspect.py				ssl.py
+antigravity.py				io.py					stat.py
+argparse.py				ipaddress.py				statistics.py
+ast.py					json					string.py
+asynchat.py				keyword.py				stringprep.py
+asyncio					lib-dynload				struct.py
+asyncore.py				lib2to3					subprocess.py
+base64.py				linecache.py				sunau.py
+bdb.py					locale.py				symtable.py
+bisect.py				logging					sysconfig.py
+bz2.py					lzma.py					tabnanny.py
+cProfile.py				mailbox.py				tarfile.py
+calendar.py				mailcap.py				telnetlib.py
+cgi.py					mimetypes.py				tempfile.py
+cgitb.py				modulefinder.py				test
+chunk.py				multiprocessing				textwrap.py
+cmd.py					netrc.py				this.py
+code.py					nntplib.py				threading.py
+codecs.py				ntpath.py				timeit.py
+codeop.py				nturl2path.py				tkinter
+collections				numbers.py				token.py
+colorsys.py				opcode.py				tokenize.py
+compileall.py				operator.py				tomllib
+concurrent				optparse.py				trace.py
+config-3.11-darwin			os.py					traceback.py
+configparser.py				pathlib.py				tracemalloc.py
+contextlib.py				pdb.py					tty.py
+contextvars.py				pickle.py				turtle.py
+copy.py					pickletools.py				turtledemo
+copyreg.py				pipes.py				types.py
+crypt.py				pkgutil.py				typing.py
+csv.py					platform.py				unittest
+ctypes					plistlib.py				urllib
+curses					poplib.py				uu.py
+dataclasses.py				posixpath.py				uuid.py
+datetime.py				pprint.py				venv
+dbm					profile.py				warnings.py
+decimal.py				pstats.py				wave.py
+difflib.py				pty.py					weakref.py
+dis.py					py_compile.py				webbrowser.py
+distutils				pyclbr.py				wsgiref
+doctest.py				pydoc.py				xdrlib.py
+email					pydoc_data				xml
+encodings				queue.py				xmlrpc
+ensurepip				quopri.py				zipapp.py
+enum.py					random.py				zipfile.py
+filecmp.py				re					zipimport.py
+fileinput.py				reprlib.py				zoneinfo
+
+# the ones below seem to be related to how the Python system works
+
+>>> sos.B( 'ls <HOME-DIR>/Library/Python/3.11/lib/python/site-packages' )
+IPython						isoduration					prometheus_client-0.16.0.dist-info
+Jinja2-3.1.2.dist-info				isoduration-20.11.0.dist-info			prompt_toolkit
+MarkupSafe-2.1.2.dist-info			jedi						prompt_toolkit-3.0.38.dist-info
+PyYAML-6.0.dist-info				jedi-0.18.2.dist-info				psutil
+Pygments-2.14.0.dist-info			jinja2						psutil-5.9.4.dist-info
+QtPy-2.3.0.dist-info				jsonpointer-2.3.dist-info			ptyprocess
+Send2Trash-1.8.0.dist-info			jsonpointer.py					ptyprocess-0.7.0.dist-info
+__pycache__					jsonschema					pure_eval
+_argon2_cffi_bindings				jsonschema-4.17.3.dist-info			pure_eval-0.2.2.dist-info
+_cffi_backend.cpython-311-darwin.so		jupyter-1.0.0.dist-info				pvectorc.cpython-311-darwin.so
+_pyrsistent_version.py				jupyter.py					pycparser
+_yaml						jupyter_client					pycparser-2.21.dist-info
+anyio						jupyter_client-8.0.3.dist-info			pygments
+anyio-3.6.2.dist-info				jupyter_console					pyrsistent
+appnope						jupyter_console-6.6.3.dist-info			pyrsistent-0.19.3.dist-info
+appnope-0.1.3.dist-info				jupyter_core					python_dateutil-2.8.2.dist-info
+argon2						jupyter_core-5.2.0.dist-info			python_json_logger-2.0.7.dist-info
+argon2_cffi-21.3.0.dist-info			jupyter_events					pythonjsonlogger
+argon2_cffi_bindings-21.2.0.dist-info		jupyter_events-0.6.3.dist-info			pyzmq-25.0.0.dist-info
+arrow						jupyter_server					qtconsole
+arrow-1.2.3.dist-info				jupyter_server-2.4.0.dist-info			qtconsole-5.4.0.dist-info
+asttokens					jupyter_server_terminals			qtpy
+asttokens-2.2.1.dist-info			jupyter_server_terminals-0.4.4.dist-info	rfc3339_validator-0.1.4.dist-info
+attr						jupyterlab_pygments				rfc3339_validator.py
+attrs						jupyterlab_pygments-0.2.2.dist-info		rfc3986_validator-0.1.1.dist-info
+attrs-22.2.0.dist-info				jupyterlab_widgets				rfc3986_validator.py
+backcall					jupyterlab_widgets-3.0.5.dist-info		send2trash
+backcall-0.2.0.dist-info			markupsafe					six-1.16.0.dist-info
+beautifulsoup4-4.11.2.dist-info			matplotlib_inline				six.py
+bleach						matplotlib_inline-0.1.6.dist-info		sniffio
+bleach-6.0.0.dist-info				mistune						sniffio-1.3.0.dist-info
+bs4						mistune-2.0.5.dist-info				soupsieve
+cffi						nbclassic					soupsieve-2.4.dist-info
+cffi-1.15.1.dist-info				nbclassic-0.5.3.dist-info			stack_data
+comm						nbclient					stack_data-0.6.2.dist-info
+comm-0.1.2.dist-info				nbclient-0.7.2.dist-info			terminado
+dateutil					nbconvert					terminado-0.17.1.dist-info
+debugpy						nbconvert-7.2.9.dist-info			tinycss2
+debugpy-1.6.6.dist-info				nbformat					tinycss2-1.2.1.dist-info
+decorator-5.1.1.dist-info			nbformat-5.7.3.dist-info			tornado
+decorator.py					nest_asyncio-1.5.6.dist-info			tornado-6.2.dist-info
+defusedxml					nest_asyncio.py					traitlets
+defusedxml-0.7.1.dist-info			notebook					traitlets-5.9.0.dist-info
+executing					notebook-6.5.3.dist-info			uri_template
+executing-1.2.0.dist-info			notebook_shim					uri_template-1.2.0.dist-info
+fastjsonschema					notebook_shim-0.2.2.dist-info			wcwidth
+fastjsonschema-2.16.3.dist-info			packaging					wcwidth-0.2.6.dist-info
+fqdn						packaging-23.0.dist-info			webcolors-1.12.dist-info
+fqdn-1.5.1.dist-info				pandocfilters-1.5.0.dist-info			webcolors.py
+idna						pandocfilters.py				webencodings
+idna-3.4.dist-info				parso						webencodings-0.5.1.dist-info
+ipykernel					parso-0.8.3.dist-info				websocket
+ipykernel-6.21.3.dist-info			pexpect						websocket_client-1.5.1.dist-info
+ipykernel_launcher.py				pexpect-4.8.0.dist-info				widgetsnbextension
+ipython-8.11.0.dist-info			pickleshare-0.7.5.dist-info			widgetsnbextension-4.0.5.dist-info
+ipython_genutils				pickleshare.py					yaml
+ipython_genutils-0.2.0.dist-info		platformdirs					zmq
+ipywidgets					platformdirs-3.1.1.dist-info
+ipywidgets-8.0.4.dist-info			prometheus_client
+
+# Below is where the pip associated with this particular version of Python (python3.11) "lives"
+
+>>> sos.B( 'ls /opt/homebrew/lib/python3.11/site-packages' )
+_distutils_hack			pip				pkg_resources			setuptools-65.6.3.dist-info
+distutils-precedence.pth	pip-22.3.1.dist-info		setuptools
+
+# the ones below have to do with CPython "core" (all C/C++ libraries)
+
+>>> sos.B( 'ls /opt/homebrew/Cellar/python@3.11/3.11.1/Frameworks/Python.framework/Versions/3.11/lib/python3.11/lib-dynload' )
+_asyncio.cpython-311-darwin.so			_lzma.cpython-311-darwin.so			_typing.cpython-311-darwin.so
+_bisect.cpython-311-darwin.so			_md5.cpython-311-darwin.so			_uuid.cpython-311-darwin.so
+_blake2.cpython-311-darwin.so			_multibytecodec.cpython-311-darwin.so		_xxsubinterpreters.cpython-311-darwin.so
+_bz2.cpython-311-darwin.so			_multiprocessing.cpython-311-darwin.so		_xxtestfuzz.cpython-311-darwin.so
+_codecs_cn.cpython-311-darwin.so		_opcode.cpython-311-darwin.so			_zoneinfo.cpython-311-darwin.so
+_codecs_hk.cpython-311-darwin.so		_pickle.cpython-311-darwin.so			array.cpython-311-darwin.so
+_codecs_iso2022.cpython-311-darwin.so		_posixshmem.cpython-311-darwin.so		audioop.cpython-311-darwin.so
+_codecs_jp.cpython-311-darwin.so		_posixsubprocess.cpython-311-darwin.so		binascii.cpython-311-darwin.so
+_codecs_kr.cpython-311-darwin.so		_queue.cpython-311-darwin.so			cmath.cpython-311-darwin.so
+_codecs_tw.cpython-311-darwin.so		_random.cpython-311-darwin.so			fcntl.cpython-311-darwin.so
+_contextvars.cpython-311-darwin.so		_scproxy.cpython-311-darwin.so			grp.cpython-311-darwin.so
+_crypt.cpython-311-darwin.so			_sha1.cpython-311-darwin.so			math.cpython-311-darwin.so
+_csv.cpython-311-darwin.so			_sha256.cpython-311-darwin.so			mmap.cpython-311-darwin.so
+_ctypes.cpython-311-darwin.so			_sha3.cpython-311-darwin.so			nis.cpython-311-darwin.so
+_ctypes_test.cpython-311-darwin.so		_sha512.cpython-311-darwin.so			pyexpat.cpython-311-darwin.so
+_curses.cpython-311-darwin.so			_socket.cpython-311-darwin.so			readline.cpython-311-darwin.so
+_curses_panel.cpython-311-darwin.so		_sqlite3.cpython-311-darwin.so			resource.cpython-311-darwin.so
+_datetime.cpython-311-darwin.so			_ssl.cpython-311-darwin.so			select.cpython-311-darwin.so
+_dbm.cpython-311-darwin.so			_statistics.cpython-311-darwin.so		syslog.cpython-311-darwin.so
+_decimal.cpython-311-darwin.so			_struct.cpython-311-darwin.so			termios.cpython-311-darwin.so
+_elementtree.cpython-311-darwin.so		_testbuffer.cpython-311-darwin.so		unicodedata.cpython-311-darwin.so
+_hashlib.cpython-311-darwin.so			_testcapi.cpython-311-darwin.so			xxlimited.cpython-311-darwin.so
+_heapq.cpython-311-darwin.so			_testimportmultiple.cpython-311-darwin.so	xxlimited_35.cpython-311-darwin.so
+_json.cpython-311-darwin.so			_testinternalcapi.cpython-311-darwin.so		zlib.cpython-311-darwin.so
+_lsprof.cpython-311-darwin.so			_testmultiphase.cpython-311-darwin.so
+
+-------------------------------------------------------------------------------
+
+
+
